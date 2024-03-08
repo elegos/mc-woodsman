@@ -14,10 +14,12 @@ import net.minecraft.util.Identifier;
 
 public class ModBlocks {
     public static final Block CHOP_BLOCK = registerBlock(
-        "chop_block",
-        new Block(
-            FabricBlockSettings.copyOf(Blocks.SPRUCE_LOG)
+        "chop_block_block",
+        new ChopBlockBlock(
+            FabricBlockSettings.copyOf(Blocks.AMETHYST_BLOCK)
                 .sounds(BlockSoundGroup.WOOD)
+                .drops(new Identifier(Woodsman.MOD_ID, "chop_block"))
+                .requiresTool()
         )
     );
 

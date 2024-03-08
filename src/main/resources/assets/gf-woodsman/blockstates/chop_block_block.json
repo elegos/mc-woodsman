@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "gf-woodsman:block/chop_block_block", "uvlock": true },
+        "facing=east": { "model": "gf-woodsman:block/chop_block_block", "y": 90, "uvlock": true },
+        "facing=south": { "model": "gf-woodsman:block/chop_block_block", "y": 180, "uvlock": true },
+        "facing=west": { "model": "gf-woodsman:block/chop_block_block", "y": 270, "uvlock": true }
+    }
+}

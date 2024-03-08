@@ -1,8 +1,8 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "stripped_spruce_log",
-		"1": "stripped_spruce_log_top",
+		"0": "block/stripped_spruce_log",
+		"1": "block/stripped_spruce_log_top",
 		"3": "item/iron_axe",
 		"particle": "item/iron_axe"
 	},
@@ -203,6 +203,29 @@
 			}
 		}
 	],
+	"display": {
+		"thirdperson_righthand": {
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"thirdperson_lefthand": {
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"firstperson_righthand": {
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"firstperson_lefthand": {
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"gui": {
+			"rotation": [34, 45, 0],
+			"translation": [0, -1.75, 0],
+			"scale": [0.45, 0.45, 0.45]
+		},
+		"fixed": {
+			"translation": [0, 0, 0.5],
+			"scale": [0.7, 0.7, 0.2]
+		}
+	},
 	"groups": [
 		{
 			"name": "chop_block",
