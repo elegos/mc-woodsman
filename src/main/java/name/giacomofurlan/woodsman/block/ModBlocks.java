@@ -18,7 +18,6 @@ public class ModBlocks {
         new ChopBlockBlock(
             FabricBlockSettings.copyOf(Blocks.AMETHYST_BLOCK)
                 .sounds(BlockSoundGroup.WOOD)
-                .drops(new Identifier(Woodsman.MOD_ID, "chop_block"))
                 .requiresTool()
         )
     );
