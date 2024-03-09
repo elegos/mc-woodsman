@@ -16,9 +16,11 @@ import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.poi.PointOfInterestType;
 
 public class ModVillagers {
+    public static final String WOODSMAN_PROFESSION_ID = "woodsman";
+
     public static final RegistryKey<PointOfInterestType> CHOP_BLOCK_POI_KEY = poiKey("chop_block_poi");
     public static final PointOfInterestType CHOP_BLOCK_POI = registerPoi("chop_block_poi", ModBlocks.CHOP_BLOCK);
-    public static final VillagerProfession WOODSMAN = registerProfession("woodsman", CHOP_BLOCK_POI_KEY);
+    public static final VillagerProfession WOODSMAN = registerProfession(WOODSMAN_PROFESSION_ID, CHOP_BLOCK_POI_KEY);
 
     private static VillagerProfession registerProfession(String name, RegistryKey<PointOfInterestType> type) {
         return Registry.register(
