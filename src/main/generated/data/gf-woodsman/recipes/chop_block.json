@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "A": {
+      "item": "minecraft:iron_axe"
+    },
+    "L": {
+      "tag": "gf-woodsman:stripped_logs"
+    }
+  },
+  "pattern": [
+    "A",
+    "L"
+  ],
+  "result": {
+    "item": "gf-woodsman:chop_block"
+  }
+}
