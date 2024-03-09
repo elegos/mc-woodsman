@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import name.giacomofurlan.woodsman.block.ModBlocks;
 import name.giacomofurlan.woodsman.item.ModItemGroups;
 import name.giacomofurlan.woodsman.item.ModItems;
+import name.giacomofurlan.woodsman.villager.ModVillagers;
 
 public class Woodsman implements ModInitializer {
 	public static final String MOD_ID = "gf-woodsman";
@@ -26,5 +27,6 @@ public class Woodsman implements ModInitializer {
 		ModItemGroups.registerItemGroups();
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
+		ModVillagers.registerVillagers();
 	}
 }
