@@ -28,6 +28,10 @@ public class DepositItemsInChestActivator implements IActivator {
 
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+        if (brain.getOptionalMemory(MemoryModuleType.WALK_TARGET).isPresent()) {
+            return false;
+        }
+
         SimpleInventory inventory = entity.getInventory();
         int inventorySize = inventory.size();
         int numStacks = 0;

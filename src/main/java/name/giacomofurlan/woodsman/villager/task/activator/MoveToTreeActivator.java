@@ -10,7 +10,6 @@ import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.WalkTarget;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.GlobalPos;
 
 public class MoveToTreeActivator implements IActivator {
     @Override
@@ -22,10 +21,7 @@ public class MoveToTreeActivator implements IActivator {
             return false;
         }
 
-        // Position of the chop block bound to
-        GlobalPos jobSitePos = entity.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE).get();
-
-        Optional<BlockPos> nearestTreeBlock = NearestElements.getNearestTree(entity, jobSitePos.getPos(), WoodsmanWorkTask.SEARCH_RADIUS, WoodsmanWorkTask.OP_DISTANCE, true);
+        Optional<BlockPos> nearestTreeBlock = NearestElements.getNearestTree(entity, WoodsmanWorkTask.SEARCH_RADIUS, true);
 
         if (nearestTreeBlock.isEmpty()) {
             return false;

@@ -7,7 +7,6 @@ import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -21,7 +20,11 @@ public class ChopTreeActivator implements IActivator {
 
         World world = entity.getWorld();
 
-        Optional<BlockPos> treeBlockInReach = NearestElements.nearestTaggedBlockInReach(world, entity.getBlockPos(), BlockTags.LOGS_THAT_BURN);
+        Optional<BlockPos> treeBlockInReach = NearestElements.getNearestTree(
+            entity,
+            NearestElements.INTERACTION_MAHNATTAN_DISTANCE,
+            false
+        );
 
         if (treeBlockInReach.isEmpty()) {
             return false;
