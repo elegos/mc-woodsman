@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.ai.pathing.Path;
@@ -22,7 +21,7 @@ import net.minecraft.world.World;
 public class NearestElements {
     public static int INTERACTION_MAHNATTAN_DISTANCE = 6;
 
-    public static Optional<BlockPos> getNearestDroppedItemByTag(Entity entity, BlockPos opCenter, int searchRadius, int operativeDistance, boolean needsToBeReachable, TagKey<Item> tag) {
+    public static Optional<BlockPos> getNearestDroppedItemByTag(Entity entity, BlockPos opCenter, int searchRadius, int operativeDistance, boolean needsToBeReachable, List<TagKey<Item>> tags) {
         Optional<BlockPos> result = Optional.empty();
         if (entity == null) {
             return result;
@@ -35,38 +34,35 @@ public class NearestElements {
         int startY = (int)startingPos.getY();
         int startZ = (int)startingPos.getZ();
 
-        BlockPos candidate = null;
+        List<BlockPos> foundItemPositions = world.getEntitiesByClass(
+            ItemEntity.class,
+            Box.enclosing(
+                new BlockPos(startX - searchRadius, startY - searchRadius, startZ - searchRadius),
+                new BlockPos(startX + searchRadius, startY + searchRadius, startZ + searchRadius)
+            ),
+            itemEntity -> tags.parallelStream().reduce(false, (acc, val) -> acc || itemEntity.getStack().isIn(val), (acc, val) -> acc || val)
+        ).stream().map(itemEntity -> itemEntity.getBlockPos()).toList();
 
-        mainLoop:
+        if (foundItemPositions.size() == 0) {
+            return Optional.empty();
+        }
+
         for (int distance = 0; distance <= searchRadius; distance++) {
-            for (BlockPos pos : cubicCoordinatesFromCenter(startX, startY, startZ, distance)) {
-                // Within local search radius, but outside operative distance
-                if (pos.getManhattanDistance(opCenter) > operativeDistance) {
-                    break mainLoop;
-                }
-
-                if (isTaggedItemAtPosition(world, pos, tag)) {
-                    if (candidate == null || pos.getSquaredDistance(startingPos) < candidate.getSquaredDistance(startingPos)) {
-                        candidate = pos;
+            Optional<BlockPos> optCandidate = cubicCoordinatesFromCenter(startX, startY, startZ, distance)
+                .parallelStream()
+                .filter(pos -> {
+                    if (!foundItemPositions.contains(pos)) {
+                        return false;
                     }
-                }
-            }
 
-            Path pathToCandidate = candidate != null
-                ? ((PathAwareEntity) entity).getNavigation().findPathTo(candidate.getX(), candidate.getY(), candidate.getZ(), 0)
-                : null;
+                    Path path = ((PathAwareEntity) entity).getNavigation().findPathTo(pos, 0, INTERACTION_MAHNATTAN_DISTANCE);
 
-            if (
-                candidate != null
-                && (
-                    !needsToBeReachable
-                    || pathToCandidate != null && pathToCandidate.getManhattanDistanceFromTarget() == 0
-                )
-            ) {
-                result = Optional.of(candidate);
-
-                // Stop the search, as all the other trees will be more distant
-                break;
+                    return path != null && path.reachesTarget();
+                })
+                .findFirst();
+            
+            if (optCandidate.isPresent()) {
+                return optCandidate;
             }
         }
 
@@ -99,34 +95,22 @@ public class NearestElements {
         int startY = (int)startingPos.getY();
         int startZ = (int)startingPos.getZ();
 
-        BlockPos candidate = null;
-
-        mainLoop:
         for (int distance = 0; distance <= searchRadius; distance++) {
-            for (BlockPos pos : cubicCoordinatesFromCenter(startX, startY, startZ, distance)) {
-                // Within local search radius, but outside operative distance
-                if (pos.mutableCopy().setY(0).getManhattanDistance(opCenter.mutableCopy().setY(0)) > operativeDistance) {
-                    break mainLoop;
-                }
-
-                if (isTreeAtPosition(world, pos) && (!includeSaplings || isTaggedBlockAtPosition(world, pos, BlockTags.SAPLINGS))) {
-                    if (candidate == null || pos.getSquaredDistance(startingPos) < candidate.getSquaredDistance(startingPos)) {
-                        candidate = pos;
+            Optional<BlockPos> optCandidate = cubicCoordinatesFromCenter(startX, startY, startZ, distance)
+                .stream()
+                .filter(pos -> {
+                    if (!isTreeAtPosition(world, pos)) {
+                        return false;
                     }
-                }
-            }
 
-            if (
-                candidate != null
-                // && (
-                //     !needsToBeReachable
-                //     || ((PathAwareEntity) entity).getNavigation().startMovingTo(candidate.getX(), candidate.getY(), candidate.getZ(), WoodsmanWorkTask.WALK_SPEED)
-                // )
-            ) {
-                result = Optional.of(candidate);
+                    Path p = needsToBeReachable ? ((PathAwareEntity) entity).getNavigation().findPathTo(pos, 0, INTERACTION_MAHNATTAN_DISTANCE) : null;
 
-                // Stop the search, as all the other trees will be more distant
-                break;
+                    return !needsToBeReachable || (p != null && p.reachesTarget());
+                })
+                .findFirst();
+            
+            if (optCandidate.isPresent()) {
+                return optCandidate;
             }
         }
 
@@ -178,8 +162,6 @@ public class NearestElements {
                 break;
             }
         }
-
-        // TODO check if it is reachable by path
 
         return result;
     }
@@ -258,22 +240,7 @@ public class NearestElements {
     public static boolean isTreeAtPosition(World world, BlockPos pos) {
         // TODO refactor
 
-        int numLogsInColumn = 0;
-        int numLeaves = 0;
-
-        if (!world.getBlockState(pos).isIn(BlockTags.LOGS_THAT_BURN)) {
-            return false;
-        }
-
-        // Search for the logs, in a vertical column
-        for (int i = -3; i <= 3; i++) {
-            BlockState blockState = world.getBlockState(pos.mutableCopy().add(0, i, 0));
-            if (blockState.isIn(BlockTags.LOGS_THAT_BURN)) {
-                numLogsInColumn += 1;
-            }
-        }
-
-        return numLogsInColumn > 1;
+        return world.getBlockState(pos).isIn(BlockTags.LOGS_THAT_BURN);
     }
 
     public static boolean isTaggedBlockAtPosition(World world, BlockPos pos, TagKey<Block> tag) {

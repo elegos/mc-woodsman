@@ -1,6 +1,7 @@
 package name.giacomofurlan.woodsman.villager.task;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +31,7 @@ import net.minecraft.util.math.GlobalPos;
 public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final int CYCLE_SECONDS = 2;
     public static final int TICKS_PER_SECOND = 20; // roughly value, experimentally taken
-    public static final int SEARCH_RADIUS = 50; // Radius from POI from which the villager should search for and plant new trees
+    public static final int SEARCH_RADIUS = 30; // Radius from POI from which the villager should search for and plant new trees
     public static final int OP_DISTANCE = 100; // Distance from POI from which the villager should work within
     public static final float WALK_SPEED = 0.4f;
     public static final int DISTANCE_BETWEEN_TREES = 4;
@@ -55,8 +56,7 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         new PlantSaplingActivator(),
         
         new PickItemsOnTheGroundActivator(),
-        new MoveToItemOnGroundActivator(ItemTags.LOGS_THAT_BURN),
-        new MoveToItemOnGroundActivator(ItemTags.SAPLINGS),
+        new MoveToItemOnGroundActivator(List.of(ItemTags.LOGS_THAT_BURN, ItemTags.SAPLINGS), SEARCH_RADIUS),
         
         new ChopTreeActivator(),
         new MoveToTreeActivator(),
@@ -96,10 +96,14 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         }
 
         for (IActivator activator : PRIORITIZED_ACTIVATORS) {
+            Woodsman.LOGGER.info(activator.getClass().getSimpleName());
             if (activator.run(entity, brain)) {
                 Woodsman.LOGGER.info("Current action: {}", activator.getClass().getSimpleName());
-                break;
+
+                return;
             }
         }
+
+        Woodsman.LOGGER.info("No activator was found");
     }
 }

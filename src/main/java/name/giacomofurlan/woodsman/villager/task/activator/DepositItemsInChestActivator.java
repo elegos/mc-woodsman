@@ -39,7 +39,7 @@ public class DepositItemsInChestActivator implements IActivator {
         }
         
         // Inventory is not full, continue
-        if (numStacks < inventorySize || depositIfNotFull && numStacks == 0) {
+        if ((depositIfNotFull && numStacks == 0) || numStacks < inventorySize) {
             return false;
         }
         

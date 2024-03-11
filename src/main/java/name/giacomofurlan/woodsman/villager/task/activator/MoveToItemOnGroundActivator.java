@@ -1,7 +1,9 @@
 package name.giacomofurlan.woodsman.villager.task.activator;
 
+import java.util.List;
 import java.util.Optional;
 
+import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.util.NearestElements;
 import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
@@ -15,13 +17,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.GlobalPos;
 
 public class MoveToItemOnGroundActivator implements IActivator {
-    TagKey<Item> tag;
+    List<TagKey<Item>> tags;
+    int searchRadius;
 
-    public MoveToItemOnGroundActivator(TagKey<Item> tag) {
-        this.tag = tag;
+    public MoveToItemOnGroundActivator(List<TagKey<Item>> tags, int searchRadius) {
+        this.tags = tags;
+        this.searchRadius = searchRadius;
     }
-
-
 
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
@@ -35,8 +37,9 @@ public class MoveToItemOnGroundActivator implements IActivator {
         // Position of the chop block bound to
         GlobalPos jobSitePos = entity.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE).get();
 
-        Optional<BlockPos> nearestItem = NearestElements.getNearestDroppedItemByTag(entity, jobSitePos.getPos(), WoodsmanWorkTask.OP_DISTANCE, WoodsmanWorkTask.OP_DISTANCE, true, this.tag);
-        // Woodsman.LOGGER.info("Nearest dropped {} pos: {}", this.tag.toString(), nearestItem.isPresent() ? nearestItem.get().toShortString() : "null");
+        Woodsman.LOGGER.info("Searching for items with tags: {}", this.tags);
+        Optional<BlockPos> nearestItem = NearestElements.getNearestDroppedItemByTag(entity, jobSitePos.getPos(), searchRadius, WoodsmanWorkTask.OP_DISTANCE, true, this.tags);
+        Woodsman.LOGGER.info("Nearest item: {}", nearestItem);
 
         if (nearestItem.isEmpty()) {
             return false;
