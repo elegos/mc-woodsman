@@ -10,7 +10,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.poi.PointOfInterestType;
@@ -32,7 +31,7 @@ public class ModVillagers {
                 entry -> entry.matchesKey(type),
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                SoundEvents.ENTITY_VILLAGER_WORK_BUTCHER
+                null
             )
         );
     }

@@ -25,7 +25,6 @@ public class VillagerTaskListProviderMixin {
     private static final ImmutableList<Pair<Integer, ? extends Task<? super VillagerEntity>>> woodsmanTaskList = ImmutableList.of(
         VillagerTaskListProviderMixin.createBusyFollowTask(),
         Pair.of(5, new WoodsmanWorkTask())
-        // TODO create a list of tasks for Woodsman profession
     );
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -1,5 +1,6 @@
 package name.giacomofurlan.woodsman;
 
+import name.giacomofurlan.woodsman.datagen.ModBlockTagsProvider;
 import name.giacomofurlan.woodsman.datagen.ModItemTagsProvider;
 import name.giacomofurlan.woodsman.datagen.ModPoiTagProvider;
 import name.giacomofurlan.woodsman.datagen.ModRecipesProvider;
@@ -12,6 +13,7 @@ public class WoodsmanDataGenerator implements DataGeneratorEntrypoint {
 		FabricDataGenerator.Pack pack = fabricDataGenerator.createPack();
 
 		pack.addProvider(ModItemTagsProvider::new);
+		pack.addProvider(ModBlockTagsProvider::new);
 		pack.addProvider(ModRecipesProvider::new);
 		pack.addProvider(ModPoiTagProvider::new);
 	}
