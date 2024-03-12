@@ -1,11 +1,8 @@
 package name.giacomofurlan.woodsman.brain.task;
 
-import java.util.stream.Stream;
-
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import name.giacomofurlan.woodsman.util.NearestElements;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
