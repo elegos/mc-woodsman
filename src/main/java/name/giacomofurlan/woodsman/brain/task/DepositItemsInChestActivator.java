@@ -13,7 +13,9 @@ import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 public class DepositItemsInChestActivator implements IActivator {
@@ -42,14 +44,26 @@ public class DepositItemsInChestActivator implements IActivator {
                 numStacks++;
             }
         }
-        
+
+        World world = entity.getWorld();
+
+        Boolean chestWithinReach = WorldUtil.getBlockPos(Box.from(new BlockBox(entity.getBlockPos())))
+            .stream()
+            .anyMatch(pos -> world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS));
+
         // Inventory is not full, continue
-        if ((depositIfNotFull && numStacks == 0) || (!depositIfNotFull && numStacks < inventorySize)) {
+        if (
+            !(chestWithinReach && numStacks > 0)
+            && (
+                (depositIfNotFull && numStacks == 0)
+                || (!depositIfNotFull && numStacks < inventorySize)
+            )
+        ) {
             return false;
         }
+
         
         BlockPos jobSite = brain.getOptionalMemory(MemoryModuleType.JOB_SITE).get().getPos();
-        World world = entity.getWorld();
 
         for (int distance = 1; distance < WoodsmanWorkTask.OP_DISTANCE; distance++) {
             Optional<BlockPos> candidatePos = WorldUtil.cubicCoordinatesFromCenter(jobSite, distance)

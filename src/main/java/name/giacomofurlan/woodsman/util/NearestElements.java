@@ -1,23 +1,50 @@
 package name.giacomofurlan.woodsman.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class NearestElements {
     public static int INTERACTION_MAHNATTAN_DISTANCE = 6;
 
+    public static Optional<BlockPos> getNearestTree(Entity entity, int searchRadius, BlockPos opCenterPos, int maxOperativeDistance) {
+        return getNearestTree(entity, searchRadius, opCenterPos, maxOperativeDistance, false);
+    }
+
+    public static Optional<BlockPos> getNearestTree(Entity entity, int searchRadius, BlockPos opCenterPos, int maxOperativeDistance, Boolean includeSaplings) {
+        World world = entity.getWorld();
+        BlockPos entityPos = entity.getBlockPos();
+        Box searchBox = WorldUtil.cubicBoxFromCenter(entityPos, searchRadius);
+
+        return WorldUtil.getBlockPos(searchBox)
+            .stream()
+            .filter(pos -> {
+                // TODO search for leaves (actual tree and not house tree)
+                if (pos.getSquaredDistance(opCenterPos) > maxOperativeDistance) {
+                    return false;
+                }
+
+                BlockState blockState = world.getBlockState(pos);
+
+                return blockState.isIn(BlockTags.LOGS_THAT_BURN) || (includeSaplings && blockState.isIn(BlockTags.SAPLINGS));
+            })
+            .sorted(Comparator.comparingDouble((BlockPos pos) -> pos.getSquaredDistance(entityPos)))
+            .findFirst();
+    }
+
     /**
      * Attempt to find the nearest tree from the given entity.
      * @param entity the entity which is searching for the nearest tree.
      * @param searchRadius The search radius the entity searches within.
-     * @param operativeDistance The operative (manhattan) distance from the opCenter the villager works within.
      * @param needsToBeReachable if true, the candidate needs to be reachable from a path point of view.
      * @return 
      */

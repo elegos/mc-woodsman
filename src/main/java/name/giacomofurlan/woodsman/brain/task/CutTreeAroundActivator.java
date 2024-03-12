@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 
+import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
+import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
@@ -12,6 +14,7 @@ import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
@@ -28,14 +31,24 @@ public class CutTreeAroundActivator implements IActivator {
 
         ImmutableList<BlockPos> leafPos = ImmutableList.of();
 
-        Optional<LookTarget> lookTarget = brain.getOptionalMemory(MemoryModuleType.LOOK_TARGET);
+        Optional<LookTarget> lookTarget = brain.getOptionalMemory(ModMemoryModuleType.LOOK_TARGET);
         if (lookTarget.isPresent()) {
-            leafPos = ImmutableList.of(lookTarget.get().getBlockPos().mutableCopy().add(0, -1, 0)); // get the block under the target (i.e. to let the sapling or log fall down)
+            LookTarget target = lookTarget.get();
+
+            if (world.getBlockState(target.getBlockPos()).isAir()) {
+                leafPos = ImmutableList.copyOf(
+                    WorldUtil.getBlockPos(
+                            Box.enclosing(target.getBlockPos(), target.getBlockPos().mutableCopy().setY((int) entity.getY()))
+                        ).stream()
+                            .filter(pos -> world.getBlockState(pos).isIn(BlockTags.LEAVES) || world.getBlockState(pos).isIn(BlockTags.LOGS_THAT_BURN))
+                            .toList()
+                );
+            }
         }
 
         leafPos = ImmutableList.<BlockPos>builder()
             .addAll(leafPos)
-            .add(entity.getBlockPos().mutableCopy().add(0, 2, 0))
+            .add(entity.getBlockPos().mutableCopy().add(0, 4, 0))
             .add(entity.getBlockPos().mutableCopy().add(facing.getOffsetX(), 2, facing.getOffsetZ()))
             .build();
 

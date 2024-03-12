@@ -32,7 +32,7 @@ import net.minecraft.util.math.GlobalPos;
 public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final int CYCLE_SECONDS = 2;
     public static final int TICKS_PER_SECOND = 20; // roughly value, experimentally taken
-    public static final int SEARCH_RADIUS = 30; // Radius from POI from which the villager should search for and plant new trees
+    public static final int SEARCH_RADIUS = 50; // Radius from POI from which the villager should search for and plant new trees
     public static final int MAX_INTERACTION_MANHATTAN_DISTANCE = 16; // Maximum manhattan distance to interact with items
     public static final int OP_DISTANCE = 142; // Sqrt distance of a 200x200 area from the center of the POI
     public static final float WALK_SPEED = 0.4f;
@@ -58,7 +58,7 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         new DepositItemsInChestActivator(),
         new MoveToItemOnGroundActivator(List.of(ItemTags.LOGS_THAT_BURN, ItemTags.SAPLINGS), SEARCH_RADIUS),
         new ChopTreeActivator(),
-        new MoveToTreeActivator(),
+        new MoveToTreeActivator(SEARCH_RADIUS, OP_DISTANCE),
         new DepositItemsInChestActivator(true),
 
         new ReturnToPOIActivator()

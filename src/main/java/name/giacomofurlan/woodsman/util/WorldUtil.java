@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction.Axis;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
@@ -61,5 +63,40 @@ public class WorldUtil {
         }
 
         return result;
+    }
+
+    /**
+     * Generate the bounding box of a cube centered at (center) with the given distance.
+     * @param center
+     * @param distance
+     * @return
+     */
+    public static Box cubicBoxFromCenter(Vec3i center, int distance) {
+        int minX = center.getX() - distance;
+        int minY = center.getY() - distance;
+        int minZ = center.getZ() - distance;
+        int maxX = center.getX() + distance;
+        int maxY = center.getY() + distance;
+        int maxZ = center.getZ() + distance;
+
+        return new Box(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+
+    public static List<BlockPos> getBlockPos(Box box) {
+        List<BlockPos> result = new ArrayList<>();
+
+        for (int x = (int) box.getMin(Axis.X); x < (int) box.getMax(Axis.X); x++) {
+            for (int y = (int) box.getMin(Axis.Y); y < (int) box.getMax(Axis.Y); y++) {
+                for (int z = (int) box.getMin(Axis.Z); z < (int) box.getMax(Axis.Z); z++) {
+                    result.add(new BlockPos(x, y, z));                    
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static int get2DManhattanDistance(BlockPos a, BlockPos b) {
+        return a.mutableCopy().setY(0).getManhattanDistance(b.mutableCopy().setY(0));
     }
 }

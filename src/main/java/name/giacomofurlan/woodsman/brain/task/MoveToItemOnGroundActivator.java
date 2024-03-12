@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
+import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
@@ -27,6 +28,8 @@ public class MoveToItemOnGroundActivator implements IActivator {
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
          Optional<WalkTarget> currentTarget = brain.getOptionalMemory(MemoryModuleType.WALK_TARGET);
+         BlockPos entityPos = entity.getBlockPos();
+         Box entityBox = Box.from(entity.getPos());
 
         // Another activity is in progress
         if (currentTarget.isPresent()) {
@@ -42,6 +45,10 @@ public class MoveToItemOnGroundActivator implements IActivator {
             itemEntity -> tags.parallelStream().reduce(false, (acc, val) -> acc || itemEntity.getStack().isIn(val), (acc, val) -> acc || val)
         ).stream()
             .map(itemEntity -> itemEntity.getBlockPos())
+            .filter(
+                pos -> !entityBox.contains(pos.getX(), pos.getY(), pos.getZ())
+                    && WorldUtil.get2DManhattanDistance(entityPos, pos) > 0
+            )
             .reduce(
                 (acc, val) ->  acc == null ? val : val.getSquaredDistance(entity.getBlockPos()) > acc.getSquaredDistance(entity.getBlockPos())
                     ? val
