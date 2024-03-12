@@ -12,6 +12,7 @@ import name.giacomofurlan.woodsman.villager.task.activator.CutTreeAroundActivato
 import name.giacomofurlan.woodsman.villager.task.activator.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.villager.task.activator.IActivator;
 import name.giacomofurlan.woodsman.villager.task.activator.MoveToItemOnGroundActivator;
+import name.giacomofurlan.woodsman.villager.task.activator.MoveToLookTargetActivator;
 import name.giacomofurlan.woodsman.villager.task.activator.MoveToTreeActivator;
 import name.giacomofurlan.woodsman.villager.task.activator.PickItemsOnTheGroundActivator;
 import name.giacomofurlan.woodsman.villager.task.activator.PlantSaplingActivator;
@@ -32,6 +33,7 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final int CYCLE_SECONDS = 2;
     public static final int TICKS_PER_SECOND = 20; // roughly value, experimentally taken
     public static final int SEARCH_RADIUS = 30; // Radius from POI from which the villager should search for and plant new trees
+    public static final int MAX_INTERACTION_MANHATTAN_DISTANCE = 16; // Maximum manhattan distance to interact with items
     public static final int OP_DISTANCE = 100; // Distance from POI from which the villager should work within
     public static final float WALK_SPEED = 0.4f;
     public static final int DISTANCE_BETWEEN_TREES = 4;
@@ -49,6 +51,8 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
+        new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
+
         new DepositItemsInChestActivator(),
 
         new CutTreeAroundActivator(),
@@ -61,8 +65,8 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         new ChopTreeActivator(),
         new MoveToTreeActivator(),
 
-        new ReturnToPOIActivator(),
-        new DepositItemsInChestActivator(true)
+        new DepositItemsInChestActivator(true),
+        new ReturnToPOIActivator()
     );
 
     @Override
@@ -96,7 +100,6 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         }
 
         for (IActivator activator : PRIORITIZED_ACTIVATORS) {
-            Woodsman.LOGGER.info(activator.getClass().getSimpleName());
             if (activator.run(entity, brain)) {
                 Woodsman.LOGGER.info("Current action: {}", activator.getClass().getSimpleName());
 

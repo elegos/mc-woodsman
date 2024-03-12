@@ -14,10 +14,7 @@ import net.minecraft.util.math.BlockPos;
 public class MoveToTreeActivator implements IActivator {
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
-        Optional<WalkTarget> currentTarget = brain.getOptionalMemory(MemoryModuleType.WALK_TARGET);
-
-        // Another activity is in progress
-        if (currentTarget.isPresent()) {
+        if (entity.isNavigating()) {
             return false;
         }
 
@@ -29,8 +26,12 @@ public class MoveToTreeActivator implements IActivator {
 
         BlockPos treeBlockPos = nearestTreeBlock.get();
 
-        brain.remember(MemoryModuleType.WALK_TARGET, new WalkTarget(treeBlockPos, WoodsmanWorkTask.WALK_SPEED, 1));
+        // brain.remember(MemoryModuleType.WALK_TARGET, new WalkTarget(treeBlockPos, WoodsmanWorkTask.WALK_SPEED, 1));
         brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(treeBlockPos));
+
+        if (treeBlockPos.getManhattanDistance(entity.getBlockPos()) <= WoodsmanWorkTask.MAX_INTERACTION_MANHATTAN_DISTANCE) {
+            return false;
+        }
 
         return true;
     }

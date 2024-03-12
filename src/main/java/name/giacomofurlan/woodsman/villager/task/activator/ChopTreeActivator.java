@@ -5,6 +5,7 @@ import java.util.Optional;
 import name.giacomofurlan.woodsman.util.NearestElements;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
+import net.minecraft.entity.ai.brain.LookTarget;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -31,7 +32,13 @@ public class ChopTreeActivator implements IActivator {
         }
 
         BlockPos treeLogPos = treeBlockInReach.get();
-        brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(treeLogPos));
+        Optional<LookTarget> lookTarget = brain.getOptionalMemory(MemoryModuleType.LOOK_TARGET);
+        if (
+            lookTarget.isEmpty()
+            || !lookTarget.get().getBlockPos().equals(treeLogPos)
+        ) {
+            brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(treeLogPos));
+        }
 
         world.breakBlock(treeLogPos, true, entity);
 

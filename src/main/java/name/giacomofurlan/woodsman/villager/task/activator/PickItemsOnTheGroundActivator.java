@@ -32,7 +32,8 @@ public class PickItemsOnTheGroundActivator implements IActivator {
             entity.getInventory().addStack(item.getStack());
             item.remove(RemovalReason.DISCARDED);
 
-            return true;
+            // Return false to avoid loosing the current profession tick
+            return false;
         }
 
 
