@@ -97,12 +97,12 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
 
         for (IActivator activator : PRIORITIZED_ACTIVATORS) {
             if (activator.run(entity, brain)) {
-                Woodsman.LOGGER.info("Current action: {}", activator.getClass().getSimpleName());
+                Woodsman.LOGGER.debug("Current action: {}", activator.getClass().getSimpleName());
 
                 return;
             }
         }
 
-        Woodsman.LOGGER.info("No activator was found");
+        Woodsman.LOGGER.debug("No activator was found");
     }
 }
