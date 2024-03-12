@@ -13,6 +13,7 @@ import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -20,17 +21,21 @@ import net.minecraft.world.World;
 
 public class DepositItemsInChestActivator implements IActivator {
     protected Boolean depositIfNotFull;
+    protected int maxSecondsBetweenDeposits;
+    protected Integer lastDepositTick = null;
 
-    public DepositItemsInChestActivator() {
-        this.depositIfNotFull = false;
-    }
-
-    public DepositItemsInChestActivator(Boolean depositIfNotFull) {
+    public DepositItemsInChestActivator(Boolean depositIfNotFull, int maxSecondsBetweenDeposits) {
+        this.maxSecondsBetweenDeposits = maxSecondsBetweenDeposits;
         this.depositIfNotFull = depositIfNotFull;
     }
 
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+        MinecraftServer server = entity.getServer();
+
+        if (lastDepositTick == null) {
+            lastDepositTick = server.getTicks();
+        }
         if (entity.isNavigating()) {
             return false;
         }
@@ -51,9 +56,16 @@ public class DepositItemsInChestActivator implements IActivator {
             .stream()
             .anyMatch(pos -> world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS));
 
-        // Inventory is not full, continue
+        Boolean needToDepositDueTooMuchTime = maxSecondsBetweenDeposits > 0
+            && numStacks > 0
+            && (server.getTicks() - lastDepositTick) > (maxSecondsBetweenDeposits * WoodsmanWorkTask.TICKS_PER_SECOND);
+
+        Boolean canDepositWithinReach = chestWithinReach && (numStacks > 0);
+
         if (
-            !(chestWithinReach && numStacks > 0)
+            !needToDepositDueTooMuchTime
+            && !needToDepositDueTooMuchTime
+            && !canDepositWithinReach
             && (
                 (depositIfNotFull && numStacks == 0)
                 || (!depositIfNotFull && numStacks < inventorySize)
@@ -92,7 +104,7 @@ public class DepositItemsInChestActivator implements IActivator {
                 continue;
             }
 
-            if (entity.getBlockPos().getManhattanDistance(candidatePos.get()) <= 1) {
+            if (entity.getBlockPos().getManhattanDistance(candidatePos.get()) <= 2) {
                 Inventory inventoryBlock = (Inventory) world.getBlockEntity(candidatePos.get());
 
                 villagerInventoryLoop:
@@ -123,6 +135,8 @@ public class DepositItemsInChestActivator implements IActivator {
                         inventory.setStack(i, ItemStack.EMPTY);
                     }
                 }
+
+                lastDepositTick = server.getTicks();
                 
                 return true;
             } else {

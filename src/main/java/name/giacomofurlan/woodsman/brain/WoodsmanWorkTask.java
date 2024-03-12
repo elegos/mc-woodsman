@@ -31,6 +31,7 @@ import net.minecraft.util.math.GlobalPos;
 
 public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final int CYCLE_SECONDS = 2;
+    public static final int DEPOSIT_INTERVAL_SECONDS = 300; // Seconds after which the woodsman will deposit items in the chest
     public static final int TICKS_PER_SECOND = 20; // roughly value, experimentally taken
     public static final int SEARCH_RADIUS = 50; // Radius from POI from which the villager should search for and plant new trees
     public static final int MAX_INTERACTION_MANHATTAN_DISTANCE = 16; // Maximum manhattan distance to interact with items
@@ -55,11 +56,11 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         new PickItemsOnTheGroundActivator(),
         new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
         new PlantSaplingActivator(),
-        new DepositItemsInChestActivator(),
+        new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS),
         new MoveToItemOnGroundActivator(List.of(ItemTags.LOGS_THAT_BURN, ItemTags.SAPLINGS), SEARCH_RADIUS),
         new ChopTreeActivator(),
         new MoveToTreeActivator(SEARCH_RADIUS, OP_DISTANCE),
-        new DepositItemsInChestActivator(true),
+        new DepositItemsInChestActivator(true, DEPOSIT_INTERVAL_SECONDS),
 
         new ReturnToPOIActivator()
     );
