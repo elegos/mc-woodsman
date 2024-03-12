@@ -58,8 +58,11 @@ public class PlantSaplingActivator implements IActivator {
                     continue;
                 }
 
-                // Can't plan in air!
-                if (world.getBlockState(candidatePos.down()).isAir()) {
+                // Can't plan in air or on dirt
+                if (
+                    !world.getBlockState(candidatePos).isAir()
+                    || world.getBlockState(candidatePos.down()).isAir()
+                ) {
                     continue;
                 }
 
