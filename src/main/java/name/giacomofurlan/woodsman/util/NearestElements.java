@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
+import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;

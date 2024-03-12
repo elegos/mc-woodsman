@@ -1,7 +1,8 @@
-package name.giacomofurlan.woodsman.villager.task.activator;
+package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.Optional;
 
+import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.LookTarget;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
@@ -33,20 +34,19 @@ public class MoveToLookTargetActivator implements IActivator {
         }
 
         Optional<GlobalPos> jobSite = brain.getOptionalMemory(MemoryModuleType.JOB_SITE);
-        Optional<LookTarget> lookTarget = brain.getOptionalMemory(MemoryModuleType.LOOK_TARGET);
+        Optional<LookTarget> lookTarget = brain.getOptionalMemory(ModMemoryModuleType.LOOK_TARGET);
 
         if (
             jobSite.isEmpty()
             || lookTarget.isEmpty()
-            || jobSite.get().getPos().equals(lookTarget.get().getBlockPos())
         ) {
             return false;
         }
 
-        Path currentPath = entity.getNavigation().getCurrentPath();
-        if (currentPath != null && currentPath.getTarget().getManhattanDistance(entity.getBlockPos()) < maxManhattanDistance) {
-            return false;
-        }
+        // Path currentPath = entity.getNavigation().getCurrentPath();
+        // if (currentPath != null && currentPath.getTarget().getManhattanDistance(entity.getBlockPos()) < maxManhattanDistance) {
+        //     return false;
+        // }
 
         BlockPos lookPos = lookTarget.get().getBlockPos();
         if (lookPos.getManhattanDistance(entity.getBlockPos()) < itemMinManhattanDistance) {
@@ -54,12 +54,13 @@ public class MoveToLookTargetActivator implements IActivator {
         }
 
         Path pathToFollow = entity.getNavigation().findPathTo(lookPos, 1);
-        int maxAllowedDistance = this.blockToInteractWithMinManhattanDistance;
         if (
             pathToFollow == null
-            || (!pathToFollow.reachesTarget() && pathToFollow.getEnd().getManhattanDistance(lookPos) > maxAllowedDistance)
+            || pathToFollow.getEnd().getBlockPos().getManhattanDistance(entity.getBlockPos()) <= 1
         ) {
+            brain.forget(ModMemoryModuleType.LOOK_TARGET);
             brain.forget(MemoryModuleType.LOOK_TARGET);
+
             return false;
         }
 

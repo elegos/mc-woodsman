@@ -1,8 +1,8 @@
-package name.giacomofurlan.woodsman.villager.task.activator;
+package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.Optional;
 
-import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
+import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.WalkTarget;

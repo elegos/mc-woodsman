@@ -1,4 +1,4 @@
-package name.giacomofurlan.woodsman.villager.task;
+package name.giacomofurlan.woodsman.brain;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,16 +7,16 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 
 import name.giacomofurlan.woodsman.Woodsman;
-import name.giacomofurlan.woodsman.villager.task.activator.ChopTreeActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.CutTreeAroundActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.DepositItemsInChestActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.IActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.MoveToItemOnGroundActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.MoveToLookTargetActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.MoveToTreeActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.PickItemsOnTheGroundActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.PlantSaplingActivator;
-import name.giacomofurlan.woodsman.villager.task.activator.ReturnToPOIActivator;
+import name.giacomofurlan.woodsman.brain.task.ChopTreeActivator;
+import name.giacomofurlan.woodsman.brain.task.CutTreeAroundActivator;
+import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
+import name.giacomofurlan.woodsman.brain.task.IActivator;
+import name.giacomofurlan.woodsman.brain.task.MoveToItemOnGroundActivator;
+import name.giacomofurlan.woodsman.brain.task.MoveToLookTargetActivator;
+import name.giacomofurlan.woodsman.brain.task.MoveToTreeActivator;
+import name.giacomofurlan.woodsman.brain.task.PickItemsOnTheGroundActivator;
+import name.giacomofurlan.woodsman.brain.task.PlantSaplingActivator;
+import name.giacomofurlan.woodsman.brain.task.ReturnToPOIActivator;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.ai.brain.Brain;
@@ -34,7 +34,7 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final int TICKS_PER_SECOND = 20; // roughly value, experimentally taken
     public static final int SEARCH_RADIUS = 30; // Radius from POI from which the villager should search for and plant new trees
     public static final int MAX_INTERACTION_MANHATTAN_DISTANCE = 16; // Maximum manhattan distance to interact with items
-    public static final int OP_DISTANCE = 100; // Distance from POI from which the villager should work within
+    public static final int OP_DISTANCE = 142; // Sqrt distance of a 200x200 area from the center of the POI
     public static final float WALK_SPEED = 0.4f;
     public static final int DISTANCE_BETWEEN_TREES = 4;
 
@@ -51,21 +51,16 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
-        new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
-
-        new DepositItemsInChestActivator(),
-
         new CutTreeAroundActivator(),
-        
-        new PlantSaplingActivator(),
-        
         new PickItemsOnTheGroundActivator(),
+        new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
+        new PlantSaplingActivator(),
+        new DepositItemsInChestActivator(),
         new MoveToItemOnGroundActivator(List.of(ItemTags.LOGS_THAT_BURN, ItemTags.SAPLINGS), SEARCH_RADIUS),
-        
         new ChopTreeActivator(),
         new MoveToTreeActivator(),
-
         new DepositItemsInChestActivator(true),
+
         new ReturnToPOIActivator()
     );
 

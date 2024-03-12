@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import name.giacomofurlan.woodsman.block.ModBlocks;
+import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.item.ModItemGroups;
 import name.giacomofurlan.woodsman.item.ModItems;
 import name.giacomofurlan.woodsman.villager.ModVillagers;
@@ -28,5 +29,6 @@ public class Woodsman implements ModInitializer {
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
 		ModVillagers.registerVillagers();
+		ModMemoryModuleType.registerMemoryModuleTypes();
 	}
 }

@@ -1,13 +1,14 @@
-package name.giacomofurlan.woodsman.villager.task.activator;
+package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.Optional;
 
+import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
+import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import name.giacomofurlan.woodsman.datagen.ModBlockTagsProvider;
 import name.giacomofurlan.woodsman.util.NearestElements;
-import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
+import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.ai.brain.WalkTarget;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
@@ -28,7 +29,7 @@ public class DepositItemsInChestActivator implements IActivator {
 
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
-        if (brain.getOptionalMemory(MemoryModuleType.WALK_TARGET).isPresent()) {
+        if (entity.isNavigating()) {
             return false;
         }
 
@@ -72,46 +73,49 @@ public class DepositItemsInChestActivator implements IActivator {
                 .map(pos -> Optional.of(pos))
                 .reduce(Optional.empty(), (accumulator, value) -> accumulator.isEmpty() || jobSite.getManhattanDistance(value.get()) < jobSite.getManhattanDistance(accumulator.get())  ? value : accumulator);
             
-            if (candidatePos.isPresent()) {
-                if (entity.getBlockPos().getManhattanDistance(candidatePos.get()) <= 1) {
-                    Inventory inventoryBlock = (Inventory) world.getBlockEntity(candidatePos.get());
+            // No containers available, but need to drop, pass with blocking action
+            if (candidatePos.isEmpty()) {
+                continue;
+            }
 
-                    villagerInventoryLoop:
-                    for (int i = 0; i < inventorySize; i++) {
-                        ItemStack stack = inventory.getStack(i);
+            if (entity.getBlockPos().getManhattanDistance(candidatePos.get()) <= 1) {
+                Inventory inventoryBlock = (Inventory) world.getBlockEntity(candidatePos.get());
 
-                        for (int slot = 0; i < inventoryBlock.size(); slot++) {
-                            ItemStack blockStack = inventoryBlock.getStack(slot);
-                            if (blockStack == ItemStack.EMPTY) {
-                                inventoryBlock.setStack(slot, stack);
+                villagerInventoryLoop:
+                for (int i = 0; i < inventorySize; i++) {
+                    ItemStack stack = inventory.getStack(i);
+
+                    for (int slot = 0; i < inventoryBlock.size(); slot++) {
+                        ItemStack blockStack = inventoryBlock.getStack(slot);
+                        if (blockStack == ItemStack.EMPTY) {
+                            inventoryBlock.setStack(slot, stack);
+                            inventory.setStack(i, ItemStack.EMPTY);
+
+                            continue villagerInventoryLoop;
+                        } else if (blockStack.getItem().equals(stack.getItem()) && blockStack.getCount() < blockStack.getMaxCount()) {
+                            int toTransfer = Math.min(stack.getCount(), blockStack.getMaxCount() - blockStack.getCount());
+                            blockStack.setCount(toTransfer + blockStack.getCount());
+                            if (toTransfer == stack.getCount()) {
                                 inventory.setStack(i, ItemStack.EMPTY);
 
                                 continue villagerInventoryLoop;
-                            } else if (blockStack.getItem().equals(stack.getItem()) && blockStack.getCount() < blockStack.getMaxCount()) {
-                                int toTransfer = Math.min(stack.getCount(), blockStack.getMaxCount() - blockStack.getCount());
-                                blockStack.setCount(toTransfer + blockStack.getCount());
-                                if (toTransfer == stack.getCount()) {
-                                    inventory.setStack(i, ItemStack.EMPTY);
-
-                                    continue villagerInventoryLoop;
-                                } else {
-                                    stack.setCount(stack.getCount() - toTransfer);
-                                }
+                            } else {
+                                stack.setCount(stack.getCount() - toTransfer);
                             }
                         }
-                        if (inventory.getStack(i) != ItemStack.EMPTY) {
-                            inventoryBlock.setStack(i, inventory.getStack(i));
-                            inventory.setStack(i, ItemStack.EMPTY);
-                        }
                     }
-                    
-                    return true;
-                } else {
-                    brain.remember(MemoryModuleType.WALK_TARGET, new WalkTarget(candidatePos.get(), WoodsmanWorkTask.WALK_SPEED, 1));
+                    if (inventory.getStack(i) != ItemStack.EMPTY) {
+                        inventoryBlock.setStack(i, inventory.getStack(i));
+                        inventory.setStack(i, ItemStack.EMPTY);
+                    }
                 }
-
+                
                 return true;
+            } else {
+                brain.remember(ModMemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(candidatePos.get()));
             }
+
+            return true;
         }
 
         // If the inventory is full, always return true (block other actions)

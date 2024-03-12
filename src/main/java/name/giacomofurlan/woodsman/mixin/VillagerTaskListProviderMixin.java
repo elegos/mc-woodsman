@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 
+import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import name.giacomofurlan.woodsman.villager.ModVillagers;
-import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
 import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.ai.brain.task.VillagerTaskListProvider;
 import net.minecraft.entity.passive.VillagerEntity;

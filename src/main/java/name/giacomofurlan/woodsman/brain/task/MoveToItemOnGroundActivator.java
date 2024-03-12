@@ -1,10 +1,10 @@
-package name.giacomofurlan.woodsman.villager.task.activator;
+package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.List;
 import java.util.Optional;
 
+import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.util.NearestElements;
-import name.giacomofurlan.woodsman.villager.task.WoodsmanWorkTask;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
@@ -40,8 +40,7 @@ public class MoveToItemOnGroundActivator implements IActivator {
 
         BlockPos itemBlockPos = nearestItem.get();
 
-        brain.remember(MemoryModuleType.WALK_TARGET, new WalkTarget(itemBlockPos, WoodsmanWorkTask.WALK_SPEED, 0));
-        brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(itemBlockPos));
+        brain.remember(ModMemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(itemBlockPos));
 
         return true;
     }

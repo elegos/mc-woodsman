@@ -1,4 +1,4 @@
-package name.giacomofurlan.woodsman.villager.task.activator;
+package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class PickItemsOnTheGroundActivator implements IActivator {
 
         BlockPos entityPos = entity.getBlockPos();
 
-        List<ItemEntity> saplingsOnTheGround = world.getEntitiesByClass(
+        List<ItemEntity> collectibleItemsOnTheGround = world.getEntitiesByClass(
             ItemEntity.class,
             Box.enclosing(entityPos.mutableCopy().add(2, 4, 2), entityPos.mutableCopy().add(-3, 0, -3)),
             (itemEntity) -> itemEntity.getStack().isIn(ItemTags.SAPLINGS)
@@ -28,15 +28,13 @@ public class PickItemsOnTheGroundActivator implements IActivator {
                 || itemEntity.getStack().getItem().equals(Items.STICK)
         );
 
-        for (ItemEntity item : saplingsOnTheGround) {
-            entity.getInventory().addStack(item.getStack());
+        for (ItemEntity item : collectibleItemsOnTheGround) {
+            entity.getInventory().addStack(item.getStack()).toString();
             item.remove(RemovalReason.DISCARDED);
-
-            // Return false to avoid loosing the current profession tick
-            return false;
         }
 
 
+        // This is a non-blocking activity
         return false;
     }
 
