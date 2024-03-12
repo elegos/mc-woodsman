@@ -50,7 +50,7 @@ public class NearestElements {
         }
 
         for (int distance = 0; distance <= searchRadius; distance++) {
-            Optional<BlockPos> optCandidate = cubicCoordinatesFromCenter(startX, startY, startZ, distance)
+            Optional<BlockPos> optCandidate = WorldUtil.cubicCoordinatesFromCenter(startingPos, distance)
                 .stream()
                 .filter(pos -> {
                     if (!candidatePos.contains(pos)) {
@@ -72,46 +72,4 @@ public class NearestElements {
 
         return Optional.empty();
     }
-
-    public static List<BlockPos> cubicCoordinatesFromCenter(int centerX, int centerY, int centerZ, int distance) {
-        ArrayList<BlockPos> result = new ArrayList<>();
-        if (distance == 0) {
-            result.add(new BlockPos(centerX, centerY, centerZ));
-
-            return result;
-        }
-
-        int minX = centerX - distance;
-        int maxX = centerX + distance;
-
-        int minY = centerY - distance;
-        int maxY = centerY + distance;
-
-        int minZ = centerZ - distance;
-        int maxZ = centerZ + distance;
-
-        for (int x = minX; x <= maxX; x++) {
-            // XY plane
-            for (int y = minY; y <= maxY; y++) {
-                result.add(new BlockPos(x, y, minZ));
-                result.add(new BlockPos(x, y, maxZ));
-            }
-            // XZ plane
-            for (int z = minZ; z <= maxZ; z++) {
-                result.add(new BlockPos(x, minY, z));
-                result.add(new BlockPos(x, maxY, z));
-            }
-        }
-
-        // YZ plane
-        for (int y = minY; y <= maxY; y++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                result.add(new BlockPos(minX, y, z));
-                result.add(new BlockPos(maxX, y, z));
-            }
-        }
-
-        return result;
-    }
-
 }

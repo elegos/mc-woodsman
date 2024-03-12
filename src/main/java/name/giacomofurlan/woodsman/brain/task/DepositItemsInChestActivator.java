@@ -5,7 +5,7 @@ import java.util.Optional;
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import name.giacomofurlan.woodsman.datagen.ModBlockTagsProvider;
-import name.giacomofurlan.woodsman.util.NearestElements;
+import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
@@ -52,7 +52,7 @@ public class DepositItemsInChestActivator implements IActivator {
         World world = entity.getWorld();
 
         for (int distance = 1; distance < WoodsmanWorkTask.OP_DISTANCE; distance++) {
-            Optional<BlockPos> candidatePos = NearestElements.cubicCoordinatesFromCenter(jobSite.getX(), jobSite.getY(), jobSite.getZ(), distance)
+            Optional<BlockPos> candidatePos = WorldUtil.cubicCoordinatesFromCenter(jobSite, distance)
                 .stream()
                 .filter((pos) -> {
                     if (!world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS)) {

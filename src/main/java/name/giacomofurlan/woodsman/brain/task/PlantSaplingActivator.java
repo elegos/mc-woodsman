@@ -3,6 +3,7 @@ package name.giacomofurlan.woodsman.brain.task;
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import name.giacomofurlan.woodsman.util.NearestElements;
+import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
@@ -41,12 +42,8 @@ public class PlantSaplingActivator implements IActivator {
             return false;
         }
 
-        int startX = villager.getBlockX();
-        int startY = villager.getBlockY();
-        int startZ = villager.getBlockZ();
-
         for (int distance = 0; distance < WoodsmanWorkTask.SEARCH_RADIUS; distance++) {
-            for (BlockPos candidatePos : NearestElements.cubicCoordinatesFromCenter(startX, startY, startZ, distance)) {
+            for (BlockPos candidatePos : WorldUtil.cubicCoordinatesFromCenter(villager.getBlockPos(), distance)) {
                 Boolean isValid = world.getStatesInBox(Box.enclosing(candidatePos.up().east().north(), candidatePos.down().west().south()))
                     .map(state -> state.isAir() || state.isIn(BlockTags.DIRT))
                     .reduce(true, (acc, val) -> acc && val);
