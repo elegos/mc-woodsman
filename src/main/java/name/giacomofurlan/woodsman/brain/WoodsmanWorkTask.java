@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableList;
 
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.brain.task.CutTreeAroundActivator;
-import name.giacomofurlan.woodsman.brain.task.CuttingTreeActivator;
+import name.giacomofurlan.woodsman.brain.task.CutTreeActivator;
 import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.brain.task.IActivator;
 import name.giacomofurlan.woodsman.brain.task.MoveToItemOnGroundActivator;
@@ -51,20 +51,21 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
+        new PickItemsOnTheGroundActivator(List.of(ItemTags.SAPLINGS, ItemTags.LOGS_THAT_BURN), List.of(Items.STICK, Items.APPLE)),
+        new CutTreeActivator(SEARCH_RADIUS, WALK_SPEED)
+
         // new CutTreeAroundActivator(),
-        // new PickItemsOnTheGroundActivator(),
         // new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
         // new PlantSaplingActivator(),
         // new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS),
         // new MoveToItemOnGroundActivator(List.of(ItemTags.LOGS_THAT_BURN, ItemTags.SAPLINGS), SEARCH_RADIUS),
 
-        new CuttingTreeActivator(SEARCH_RADIUS, WALK_SPEED),
 
         // new ChopTreeActivator(),
         // new MoveToTreeActivator(SEARCH_RADIUS, OP_DISTANCE),
-        new DepositItemsInChestActivator(true, DEPOSIT_INTERVAL_SECONDS),
+        // new DepositItemsInChestActivator(true, DEPOSIT_INTERVAL_SECONDS),
 
-        new ReturnToPOIActivator()
+        // new ReturnToPOIActivator()
     );
 
     @Override

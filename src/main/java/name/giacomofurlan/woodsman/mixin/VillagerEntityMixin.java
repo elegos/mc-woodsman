@@ -2,10 +2,9 @@ package name.giacomofurlan.woodsman.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import net.minecraft.entity.ai.brain.Brain;
@@ -38,8 +37,8 @@ public class VillagerEntityMixin {
             ModMemoryModuleType.LOOK_TARGET
         });
 
-    @Inject(method = "createBrainProfile", at = @At("RETURN"), cancellable = true)
-    private void createBrainProfile(CallbackInfoReturnable<Brain.Profile<VillagerEntity>> cir) {
-        cir.setReturnValue(Brain.createProfile(MEMORY_MODULES, SENSORS));
+    @ModifyReturnValue(method = "createBrainProfile", at = @At("RETURN"))
+    private Brain.Profile<VillagerEntity> createBrainProfile(Brain.Profile<VillagerEntity> original) {
+        return Brain.createProfile(MEMORY_MODULES, SENSORS);
     }
 }
