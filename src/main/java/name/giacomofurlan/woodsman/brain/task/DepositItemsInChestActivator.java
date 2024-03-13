@@ -4,16 +4,18 @@ import java.util.Optional;
 
 import name.giacomofurlan.woodsman.datagen.ModBlockTagsProvider;
 import name.giacomofurlan.woodsman.util.WorldUtil;
+import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.GlobalPos;
 import net.minecraft.world.World;
 
 public class DepositItemsInChestActivator extends WalkableActivator {
@@ -55,14 +57,19 @@ public class DepositItemsInChestActivator extends WalkableActivator {
         int numStacks = 0;
         
         for (int i = 0; i < inventorySize; i++) {
-            if (inventory.getStack(i) != ItemStack.EMPTY) {
+            ItemStack itemStack = inventory.getStack(i);
+            if (itemStack.isIn(ItemTags.SAPLINGS)) {
+                inventorySize--;
+            } else if (itemStack.getItem() != Items.AIR) {
                 numStacks++;
             }
         }
 
         World world = entity.getWorld();
+        Optional<GlobalPos> jobPos = brain.getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
+        Box jobPosBox = new Box(jobPos.get().getPos()).expand(10);
 
-        Boolean chestWithinReach = WorldUtil.getBlockPos(Box.from(new BlockBox(entity.getBlockPos())))
+        Boolean chestAroundChopBlock = WorldUtil.getBlockPos(jobPosBox)
             .stream()
             .anyMatch(pos -> world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS));
 
@@ -70,15 +77,14 @@ public class DepositItemsInChestActivator extends WalkableActivator {
             && numStacks > 0
             && (server.getTicks() - lastDepositTick) > (maxSecondsBetweenDeposits * ticksPerSecond);
 
-        Boolean canDepositWithinReach = chestWithinReach && (numStacks > 0);
+        Boolean canDepositWithinReach = chestAroundChopBlock && (numStacks > 0);
 
         if (
             !needToDepositDueTooMuchTime
-            && !needToDepositDueTooMuchTime
             && !canDepositWithinReach
             && (
-                (depositIfNotFull && numStacks == 0)
-                || (!depositIfNotFull && numStacks < inventorySize)
+                (!depositIfNotFull && numStacks == 0)
+                || (depositIfNotFull && numStacks < inventorySize)
             )
         ) {
             return false;
@@ -89,86 +95,87 @@ public class DepositItemsInChestActivator extends WalkableActivator {
         }
 
         
-        BlockPos jobSite = brain.getOptionalMemory(MemoryModuleType.JOB_SITE).get().getPos();
+        Optional<BlockPos> candidatePos = WorldUtil.getBlockPos(jobPosBox, true)
+            .stream()
+            .filter(pos -> world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS))
+            .filter(pos -> ((LootableContainerBlockEntity) world.getBlockEntity(pos))
+                        .containsAny(stack -> stack.getItem() == Items.AIR))
+            .findFirst();
+        
+        if (candidatePos.isEmpty()) {
+            return false;
+        }
 
-        for (int distance = 1; distance < operativeDistance; distance++) {
-            Optional<BlockPos> candidatePos = WorldUtil.cubicCoordinatesFromCenter(jobSite, distance)
-                .stream()
-                .filter((pos) -> {
-                    if (!world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS)) {
-                        return false;
-                    }
+        Optional<BlockPos> targetPos = WorldUtil.getBlockPos(new Box(candidatePos.get()).expand(1))
+            .stream()
+            .filter(pos -> world.getBlockState(pos).isAir())
+            .findFirst();
 
-                    // Filter full chests
-                    Inventory candidateInventory = (Inventory) world.getBlockEntity(pos);
-                    int numOccupiedStacks = 0;
-                    for (int i = 0; i < inventorySize; i++) {
-                        if (candidateInventory.getStack(i) != ItemStack.EMPTY) {
-                            numOccupiedStacks++;
-                        }
-                    }
+        if (targetPos.isEmpty()) {
+            return false;
+        }
 
-                    return numOccupiedStacks < candidateInventory.size();
-                })
-                .map(pos -> Optional.of(pos))
-                .reduce(Optional.empty(), (accumulator, value) -> accumulator.isEmpty() || jobSite.getManhattanDistance(value.get()) < jobSite.getManhattanDistance(accumulator.get())  ? value : accumulator);
-            
-            if (candidatePos.isEmpty()) {
-                continue;
-            }
-
-            Optional<BlockPos> targetPos = WorldUtil.getBlockPos(new Box(candidatePos.get()).expand(1))
-                .stream()
-                .filter(pos -> world.getBlockState(pos).isAir())
-                .findFirst();
-
-            if (targetPos.isEmpty()) {
-                continue;
-            }
-
-            startWalking(entity, targetPos.get());
-            if (!hasArrived(entity)) {
-                return true;
-            }
-
-            Inventory inventoryBlock = (Inventory) world.getBlockEntity(candidatePos.get());
-
-            villagerInventoryLoop:
-            for (int i = 0; i < inventorySize; i++) {
-                ItemStack stack = inventory.getStack(i);
-
-                for (int slot = 0; i < inventoryBlock.size(); slot++) {
-                    ItemStack blockStack = inventoryBlock.getStack(slot);
-                    if (blockStack == ItemStack.EMPTY) {
-                        inventoryBlock.setStack(slot, stack);
-                        inventory.setStack(i, ItemStack.EMPTY);
-
-                        continue villagerInventoryLoop;
-                    } else if (blockStack.getItem().equals(stack.getItem()) && blockStack.getCount() < blockStack.getMaxCount()) {
-                        int toTransfer = Math.min(stack.getCount(), blockStack.getMaxCount() - blockStack.getCount());
-                        blockStack.setCount(toTransfer + blockStack.getCount());
-                        if (toTransfer == stack.getCount()) {
-                            inventory.setStack(i, ItemStack.EMPTY);
-
-                            continue villagerInventoryLoop;
-                        } else {
-                            stack.setCount(stack.getCount() - toTransfer);
-                        }
-                    }
-                }
-                if (inventory.getStack(i) != ItemStack.EMPTY) {
-                    inventoryBlock.setStack(i, inventory.getStack(i));
-                    inventory.setStack(i, ItemStack.EMPTY);
-                }
-            }
-
-            lastDepositTick = server.getTicks();
-            
+        startWalking(entity, targetPos.get());
+        if (!hasArrived(entity)) {
             return true;
         }
 
-        // If the inventory is full, always return true (block other actions)
+        LootableContainerBlockEntity inventoryBlock = (LootableContainerBlockEntity) world.getBlockEntity(candidatePos.get());
+
+        for (int i = 0; i < inventorySize; i++) {
+            ItemStack stack = inventory.getStack(i);
+
+            if (stack.isIn(ItemTags.SAPLINGS) || stack.getItem() == Items.AIR) {
+                continue;
+            }
+
+            int result = addItemStackToChest(inventoryBlock, stack);
+            if (result == 0) {
+                inventory.setStack(i, ItemStack.EMPTY);
+            } else {
+                stack.setCount(result);
+            }
+        }
+
+        lastDepositTick = server.getTicks();
+        
         return true;
+    }
+
+    /**
+     * Adds an {@link ItemStack} to a chest block entity. Returns the number of items left that couldn't be added.
+     *
+     * @param chestEntity The chest block entity to add the {@link ItemStack} to
+     * @param stack The {@link ItemStack} to add
+     * @return The number of items left that couldn't be added
+     */
+    protected int addItemStackToChest(LootableContainerBlockEntity chestEntity, ItemStack stack) {
+        if (chestEntity == null) {
+            return -1;
+        }
+
+        for (int slot = 0; slot < chestEntity.size(); slot++) {
+            ItemStack slotStack = chestEntity.getStack(slot);
+
+            if (slotStack.isEmpty()) {
+                chestEntity.setStack(slot, stack.copy());
+
+                return 0;
+            }
+
+            if (ItemStack.areItemsEqual(stack, slotStack)) {
+                int spaceLeftInSlot = Math.min(stack.getCount(), slotStack.getMaxCount() - slotStack.getCount());
+
+                slotStack.increment(spaceLeftInSlot);
+                stack.decrement(spaceLeftInSlot);
+
+                if (stack.isEmpty()) {
+                    return 0;
+                }
+            }
+        }
+
+        return stack.getCount();
     }
 
 }

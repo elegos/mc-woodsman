@@ -1,6 +1,5 @@
 package name.giacomofurlan.woodsman.brain;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,13 +10,11 @@ import name.giacomofurlan.woodsman.brain.task.CutTreeActivator;
 import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.brain.task.IActivator;
 import name.giacomofurlan.woodsman.brain.task.PickItemsOnTheGroundActivator;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import name.giacomofurlan.woodsman.brain.task.PlantSaplingActivator;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.VillagerWorkTask;
 import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
@@ -33,21 +30,11 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final float WALK_SPEED = 0.4f;
     public static final int DISTANCE_BETWEEN_TREES = 4;
 
-    public static final HashMap<Item, Block> SAPLINGS_MAP = new HashMap<>(){{
-        put(Items.ACACIA_SAPLING, Blocks.ACACIA_SAPLING);
-        put(Items.BIRCH_SAPLING, Blocks.BIRCH_SAPLING);
-        put(Items.CHERRY_SAPLING, Blocks.CHERRY_SAPLING);
-        put(Items.DARK_OAK_SAPLING, Blocks.DARK_OAK_SAPLING);
-        put(Items.JUNGLE_SAPLING, Blocks.JUNGLE_SAPLING);
-        put(Items.OAK_SAPLING, Blocks.OAK_SAPLING);
-        put(Items.SPRUCE_SAPLING, Blocks.SPRUCE_SAPLING);
-    }};
-
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
+        new PlantSaplingActivator(SEARCH_RADIUS, WALK_SPEED),
         new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS, TICKS_PER_SECOND, OP_DISTANCE, WALK_SPEED),
-
         new PickItemsOnTheGroundActivator(
             List.of(ItemTags.SAPLINGS, ItemTags.LOGS_THAT_BURN),
             List.of(Items.STICK, Items.APPLE),
@@ -56,7 +43,6 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         ),
         new CutTreeActivator(SEARCH_RADIUS, WALK_SPEED),
 
-        // new PlantSaplingActivator(),
         new DepositItemsInChestActivator(true, DEPOSIT_INTERVAL_SECONDS, TICKS_PER_SECOND, OP_DISTANCE, WALK_SPEED)
         // new ReturnToPOIActivator()
     );

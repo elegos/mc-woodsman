@@ -1,5 +1,7 @@
 package name.giacomofurlan.woodsman.brain.task;
 
+import java.util.Optional;
+
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -67,4 +69,9 @@ public abstract class WalkableActivator implements IActivator {
         return currentPath != null;
     }
     
+    protected Optional<BlockPos> getWalkTarget() {
+        return currentPath != null
+            ? Optional.of(currentPath.getTarget())
+            : Optional.empty();
+    }
 }

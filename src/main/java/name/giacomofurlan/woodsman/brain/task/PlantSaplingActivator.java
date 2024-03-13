@@ -1,30 +1,52 @@
 package name.giacomofurlan.woodsman.brain.task;
 
-import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
-import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
+import java.util.HashMap;
+import java.util.Optional;
+
 import name.giacomofurlan.woodsman.util.WorldUtil;
-import net.minecraft.entity.ai.brain.BlockPosLookTarget;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
-public class PlantSaplingActivator implements IActivator {
+public class PlantSaplingActivator extends WalkableActivator {
+    protected int searchRadius;
+
+    public static final HashMap<Item, Block> SAPLINGS_MAP = new HashMap<>(){{
+        put(Items.ACACIA_SAPLING, Blocks.ACACIA_SAPLING);
+        put(Items.BIRCH_SAPLING, Blocks.BIRCH_SAPLING);
+        put(Items.CHERRY_SAPLING, Blocks.CHERRY_SAPLING);
+        put(Items.DARK_OAK_SAPLING, Blocks.DARK_OAK_SAPLING);
+        put(Items.JUNGLE_SAPLING, Blocks.JUNGLE_SAPLING);
+        put(Items.OAK_SAPLING, Blocks.OAK_SAPLING);
+        put(Items.SPRUCE_SAPLING, Blocks.SPRUCE_SAPLING);
+    }};
+
+    public PlantSaplingActivator(int searchRadius, float walkSpeed) {
+        super(walkSpeed);
+
+        this.searchRadius = searchRadius;
+    }
+
     @Override
-    public boolean run(VillagerEntity villager, Brain<VillagerEntity> brain) {
-        if (brain.getOptionalMemory(MemoryModuleType.WALK_TARGET).isPresent()) {
-            return false;
+    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+        if (walkRoutine(entity)) {
+            return true;
         }
 
-        World world = villager.getWorld();
+        World world = entity.getWorld();
 
-        SimpleInventory inventory = villager.getInventory();
+        SimpleInventory inventory = entity.getInventory();
 
         ItemStack sapling = null;
 
@@ -41,42 +63,36 @@ public class PlantSaplingActivator implements IActivator {
             return false;
         }
 
-        for (int distance = 0; distance < WoodsmanWorkTask.SEARCH_RADIUS; distance++) {
-            for (BlockPos candidatePos : WorldUtil.cubicCoordinatesFromCenter(villager.getBlockPos(), distance)) {
-                Boolean isValid = world.getStatesInBox(Box.enclosing(candidatePos.up().east().north(), candidatePos.down().west().south()))
-                    .map(state -> state.isAir() || state.isIn(BlockTags.DIRT))
-                    .reduce(true, (acc, val) -> acc && val);
-                
-                if (!isValid) {
-                    continue;
-                }
+        Optional<BlockPos> walkTarget = getWalkTarget();
+        // walkTarget is set, and so we're arrived at the target (if not we'd have early returned at the beginning of the method)
+        if (walkTarget.isPresent()) {
+            world.setBlockState(walkTarget.get(), SAPLINGS_MAP.get(sapling.getItem()).getDefaultState());
+            inventory.removeItem(sapling.getItem(), 1);
+            stopWalking(entity);
 
-                // Can't plan in air or on dirt
-                if (
-                    !world.getBlockState(candidatePos).isAir()
-                    || world.getBlockState(candidatePos.down()).isAir()
-                ) {
-                    continue;
-                }
-
-                // Position is too far away to plant the seed, move to it
-                // if (candidatePos.getManhattanDistance(villager.getBlockPos()) > NearestElements.INTERACTION_MAHNATTAN_DISTANCE) {
-                if (candidatePos.getManhattanDistance(villager.getBlockPos()) > 5) {
-                    brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(candidatePos));
-                    brain.remember(ModMemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(candidatePos));
-
-                    return true;
-                }
-
-                brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(candidatePos));
-                world.setBlockState(candidatePos, WoodsmanWorkTask.SAPLINGS_MAP.get(sapling.getItem()).getDefaultState());
-
-                inventory.removeItem(sapling.getItem(), 1);
-
-                return true;
-            }
+            return true;
         }
 
-        return false;
+        Optional<BlockPos> candidatePos = WorldUtil.getBlockPos(
+            new Box(brain.getOptionalMemory(MemoryModuleType.JOB_SITE).get().getPos()).expand(searchRadius),
+            true
+        )
+            .stream()
+            .filter(pos -> {
+                return world.getBlockState(pos).isAir()
+                    && world.getStatesInBox(new Box(pos).expand(5, 0, 5))
+                        .map(state -> state.isAir() || state.isIn(BlockTags.DIRT))
+                        .reduce(true, (acc, val) -> acc && val)
+                    && world.getBlockState(pos.down()).isIn(BlockTags.DIRT);
+            }).findFirst();
+
+        // no block where to plant
+        if (candidatePos.isEmpty()) {
+            return false;
+        }
+
+        startWalking(entity, candidatePos.get());
+
+        return true;
     }
 }

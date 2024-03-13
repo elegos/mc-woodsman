@@ -2,6 +2,7 @@ package name.giacomofurlan.woodsman.util;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -14,9 +15,9 @@ import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.world.World;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
 
 public class WorldUtil {
     /**
@@ -91,16 +92,6 @@ public class WorldUtil {
         return new Box(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
-    protected static void sortIntegerListFromMiddleToEnds(List<Integer> list) {
-        ArrayList<Integer> listCopy = new ArrayList<>(list);
-        list.clear();
-        while (!listCopy.isEmpty()) {
-            int index = (int) Math.floor(listCopy.size() / 2);
-            list.add(listCopy.get(index));
-            listCopy.remove(index);
-        }
-    }
-
     public static List<BlockPos> getBlockPos(Box box, Boolean fromCenter) {
         List<BlockPos> result = new ArrayList<>();
 
@@ -110,12 +101,6 @@ public class WorldUtil {
         yList = new ArrayList<>(IntStream.rangeClosed((int) box.getMin(Axis.Y), (int)box.getMax(Axis.Y)).boxed().toList());
         zList = new ArrayList<>(IntStream.rangeClosed((int) box.getMin(Axis.Z), (int)box.getMax(Axis.Z)).boxed().toList());
 
-        if (fromCenter) {
-            sortIntegerListFromMiddleToEnds(xList);
-            sortIntegerListFromMiddleToEnds(yList);
-            sortIntegerListFromMiddleToEnds(zList);
-        }
-
         for (int x : xList) {
             for (int y : yList) {
                 for (int z : zList) {
@@ -124,23 +109,18 @@ public class WorldUtil {
             }
         }
 
+        // Randomize to avoid any bias
+        if (fromCenter) {
+            Vec3d center = box.getCenter();
+            Collections.shuffle(result);
+            result.sort((a, b) -> Double.compare(a.getSquaredDistance(center), b.getSquaredDistance(center)));
+        }
+
         return result;
     }
 
     public static List<BlockPos> getBlockPos(Box box) {
         return getBlockPos(box, false);
-
-        // List<BlockPos> result = new ArrayList<>();
-
-        // for (int x = (int) box.getMin(Axis.X); x < (int) box.getMax(Axis.X); x++) {
-        //     for (int y = (int) box.getMin(Axis.Y); y < (int) box.getMax(Axis.Y); y++) {
-        //         for (int z = (int) box.getMin(Axis.Z); z < (int) box.getMax(Axis.Z); z++) {
-        //             result.add(new BlockPos(x, y, z));                    
-        //         }
-        //     }
-        // }
-
-        // return result;
     }
 
     public static int get2DManhattanDistance(BlockPos a, BlockPos b) {
