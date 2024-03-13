@@ -7,15 +7,9 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 
 import name.giacomofurlan.woodsman.Woodsman;
-import name.giacomofurlan.woodsman.brain.task.CutTreeAroundActivator;
 import name.giacomofurlan.woodsman.brain.task.CutTreeActivator;
-import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.brain.task.IActivator;
-import name.giacomofurlan.woodsman.brain.task.MoveToItemOnGroundActivator;
-import name.giacomofurlan.woodsman.brain.task.MoveToLookTargetActivator;
 import name.giacomofurlan.woodsman.brain.task.PickItemsOnTheGroundActivator;
-import name.giacomofurlan.woodsman.brain.task.PlantSaplingActivator;
-import name.giacomofurlan.woodsman.brain.task.ReturnToPOIActivator;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.ai.brain.Brain;
@@ -51,7 +45,12 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
-        new PickItemsOnTheGroundActivator(List.of(ItemTags.SAPLINGS, ItemTags.LOGS_THAT_BURN), List.of(Items.STICK, Items.APPLE)),
+        new PickItemsOnTheGroundActivator(
+            List.of(ItemTags.SAPLINGS, ItemTags.LOGS_THAT_BURN),
+            List.of(Items.STICK, Items.APPLE),
+            SEARCH_RADIUS,
+            WALK_SPEED
+        ),
         new CutTreeActivator(SEARCH_RADIUS, WALK_SPEED)
 
         // new CutTreeAroundActivator(),

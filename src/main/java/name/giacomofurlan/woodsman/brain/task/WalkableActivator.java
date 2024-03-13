@@ -3,15 +3,19 @@ package name.giacomofurlan.woodsman.brain.task;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 public abstract class WalkableActivator implements IActivator {
     float walkSpeed;
 
     Path currentPath;
 
+    Vec3d lastKnownPos;
+
 
     public WalkableActivator(float walkSpeed) {
         this.walkSpeed = walkSpeed;
+        this.lastKnownPos = null;
     }
 
     protected boolean walkRoutine(VillagerEntity entity) {
@@ -21,6 +25,11 @@ public abstract class WalkableActivator implements IActivator {
 
         if (currentPath.isFinished()) {
             return false;
+        }
+
+        if (lastKnownPos != null && lastKnownPos == entity.getPos()) {
+            // Possibly stuck
+            currentPath = entity.getNavigation().findPathTo(currentPath.getEnd().getBlockPos(), 0);
         }
 
         entity.getNavigation().startMovingAlong(currentPath, walkSpeed);
