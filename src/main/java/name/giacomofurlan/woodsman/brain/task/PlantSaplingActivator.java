@@ -2,7 +2,6 @@ package name.giacomofurlan.woodsman.brain.task;
 
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
-import name.giacomofurlan.woodsman.util.NearestElements;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.ai.brain.BlockPosLookTarget;
 import net.minecraft.entity.ai.brain.Brain;
@@ -61,7 +60,8 @@ public class PlantSaplingActivator implements IActivator {
                 }
 
                 // Position is too far away to plant the seed, move to it
-                if (candidatePos.getManhattanDistance(villager.getBlockPos()) > NearestElements.INTERACTION_MAHNATTAN_DISTANCE) {
+                // if (candidatePos.getManhattanDistance(villager.getBlockPos()) > NearestElements.INTERACTION_MAHNATTAN_DISTANCE) {
+                if (candidatePos.getManhattanDistance(villager.getBlockPos()) > 5) {
                     brain.remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(candidatePos));
                     brain.remember(ModMemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(candidatePos));
 

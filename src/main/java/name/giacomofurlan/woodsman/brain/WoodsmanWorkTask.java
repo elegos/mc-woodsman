@@ -57,7 +57,6 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         // new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
         // new PlantSaplingActivator(),
         // new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS),
-        // new MoveToItemOnGroundActivator(List.of(ItemTags.LOGS_THAT_BURN, ItemTags.SAPLINGS), SEARCH_RADIUS),
 
 
         // new ChopTreeActivator(),
