@@ -53,16 +53,8 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
         ),
         new CutTreeActivator(SEARCH_RADIUS, WALK_SPEED)
 
-        // new CutTreeAroundActivator(),
-        // new MoveToLookTargetActivator(1, MAX_INTERACTION_MANHATTAN_DISTANCE, OP_DISTANCE, WALK_SPEED),
         // new PlantSaplingActivator(),
         // new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS),
-
-
-        // new ChopTreeActivator(),
-        // new MoveToTreeActivator(SEARCH_RADIUS, OP_DISTANCE),
-        // new DepositItemsInChestActivator(true, DEPOSIT_INTERVAL_SECONDS),
-
         // new ReturnToPOIActivator()
     );
 
