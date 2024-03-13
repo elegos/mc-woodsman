@@ -81,3 +81,7 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+loom {
+	log4jConfigs.from(file("src/dev/resources/log4j.xml"))
+}
