@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.brain.task.CutTreeActivator;
+import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.brain.task.IActivator;
 import name.giacomofurlan.woodsman.brain.task.PickItemsOnTheGroundActivator;
 import net.minecraft.block.Block;
@@ -45,16 +46,18 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
+        new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS, TICKS_PER_SECOND, OP_DISTANCE, WALK_SPEED),
+
         new PickItemsOnTheGroundActivator(
             List.of(ItemTags.SAPLINGS, ItemTags.LOGS_THAT_BURN),
             List.of(Items.STICK, Items.APPLE),
             SEARCH_RADIUS,
             WALK_SPEED
         ),
-        new CutTreeActivator(SEARCH_RADIUS, WALK_SPEED)
+        new CutTreeActivator(SEARCH_RADIUS, WALK_SPEED),
 
         // new PlantSaplingActivator(),
-        // new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS),
+        new DepositItemsInChestActivator(true, DEPOSIT_INTERVAL_SECONDS, TICKS_PER_SECOND, OP_DISTANCE, WALK_SPEED)
         // new ReturnToPOIActivator()
     );
 

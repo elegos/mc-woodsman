@@ -23,9 +23,7 @@ public abstract class WalkableActivator implements IActivator {
             return false;
         }
 
-        BlockPos entityPos = entity.getBlockPos();
-
-        if (currentPath.isFinished() || entityPos.equals(currentPath.getEnd().getBlockPos())) {
+        if (hasArrived(entity)) {
             lastKnownPos = null;
 
             return false;
@@ -49,6 +47,12 @@ public abstract class WalkableActivator implements IActivator {
         currentPath = entity.getNavigation().findPathTo(pos, 1);
 
         return currentPath != null;
+    }
+
+    public boolean hasArrived(VillagerEntity entity) {
+        return currentPath == null
+            || currentPath.isFinished()
+            || currentPath.getEnd().getBlockPos().equals(entity.getBlockPos());
     }
 
     protected void stopWalking(VillagerEntity entity) {
