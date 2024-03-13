@@ -37,7 +37,7 @@ public class PickItemsOnTheGroundActivator extends WalkableActivator {
         // Pick any item during the course of action
         world.getEntitiesByClass(
             ItemEntity.class,
-            Box.enclosing(entityPos.mutableCopy().add(2, 4, 2), entityPos.mutableCopy().add(-3, 0, -3)),
+            Box.enclosing(entityPos.mutableCopy().add(2, 6, 2), entityPos.mutableCopy().add(-3, 0, -3)),
             this::checkItemOnGround
         ).forEach(itemEntity -> {
             entity.getInventory().addStack(itemEntity.getStack()).toString();

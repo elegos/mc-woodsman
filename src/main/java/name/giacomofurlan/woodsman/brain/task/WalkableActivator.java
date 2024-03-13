@@ -23,7 +23,11 @@ public abstract class WalkableActivator implements IActivator {
             return false;
         }
 
-        if (currentPath.isFinished()) {
+        BlockPos entityPos = entity.getBlockPos();
+
+        if (currentPath.isFinished() || entityPos.equals(currentPath.getEnd().getBlockPos())) {
+            lastKnownPos = null;
+
             return false;
         }
 
@@ -32,7 +36,11 @@ public abstract class WalkableActivator implements IActivator {
             currentPath = entity.getNavigation().findPathTo(currentPath.getEnd().getBlockPos(), 0);
         }
 
-        entity.getNavigation().startMovingAlong(currentPath, walkSpeed);
+        lastKnownPos = entity.getPos();
+
+        if (!entity.isNavigating()) {
+            entity.getNavigation().startMovingAlong(currentPath, walkSpeed);
+        }
 
         return true;
     }
