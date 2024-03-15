@@ -1,17 +1,27 @@
 package name.giacomofurlan.woodsman.mixin;
 
+import java.util.Optional;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
+import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
+import name.giacomofurlan.woodsman.util.WorldCache;
+import name.giacomofurlan.woodsman.villager.ModVillagers;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.util.math.GlobalPos;
+import net.minecraft.village.VillagerData;
+import net.minecraft.world.World;
 
 @Mixin(VillagerEntity.class)
 public class VillagerEntityMixin {
@@ -40,5 +50,21 @@ public class VillagerEntityMixin {
     @ModifyReturnValue(method = "createBrainProfile", at = @At("RETURN"))
     private Brain.Profile<VillagerEntity> createBrainProfile(Brain.Profile<VillagerEntity> original) {
         return Brain.createProfile(MEMORY_MODULES, SENSORS);
+    }
+
+    @Inject(method = "setVillagerData", at = @At("TAIL"))
+    private void setVillagerData(VillagerData villagerData, CallbackInfo ci) {
+        if (villagerData.getProfession() != ModVillagers.WOODSMAN) {
+            return;
+        }
+
+        VillagerEntity villager = (VillagerEntity)(Object)this;
+        Optional<GlobalPos> jobSite = villager.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE);
+        if (jobSite.isEmpty()) {
+            return;
+        }
+
+        World world = villager.getEntityWorld();
+        WorldCache.getInstance().cacheCube(world, jobSite.get().getPos(), WoodsmanWorkTask.OP_DISTANCE);
     }
 }
