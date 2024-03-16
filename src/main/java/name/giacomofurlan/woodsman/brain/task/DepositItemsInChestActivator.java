@@ -48,7 +48,7 @@ public class DepositItemsInChestActivator extends WalkableActivator {
             lastDepositTick = server.getTicks();
         }
 
-        if (isFollowingPath() && entity.isNavigating()) {
+        if (entity.getNavigation().isFollowingPath() && entity.isNavigating()) {
             return true;
         }
 
@@ -64,37 +64,39 @@ public class DepositItemsInChestActivator extends WalkableActivator {
                 numStacks++;
             }
         }
+        
+        if (numStacks == 0) {
+            return false;
+        }
 
+        
         World world = entity.getWorld();
         Optional<GlobalPos> jobPos = brain.getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
         Box jobPosBox = new Box(jobPos.get().getPos()).expand(10);
-
+        
         Boolean chestAroundChopBlock = WorldUtil.getBlockPos(jobPosBox)
             .stream()
             .anyMatch(pos -> world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS));
-
-        Boolean needToDepositDueTooMuchTime = maxSecondsBetweenDeposits > 0
-            && numStacks > 0
-            && (server.getTicks() - lastDepositTick) > (maxSecondsBetweenDeposits * ticksPerSecond);
-
-        Boolean canDepositWithinReach = chestAroundChopBlock && (numStacks > 0);
-
-        if (
-            !needToDepositDueTooMuchTime
-            && !canDepositWithinReach
-            && (
-                (!depositIfNotFull && numStacks == 0)
-                || (depositIfNotFull && numStacks < inventorySize)
-            )
-        ) {
+        
+        if (!chestAroundChopBlock) {
             return false;
         }
+
+        Boolean isFullOfItems = numStacks == inventorySize;
+
+        Boolean needToDepositDueTooMuchTime = maxSecondsBetweenDeposits > 0
+            && (server.getTicks() - lastDepositTick) > (maxSecondsBetweenDeposits * ticksPerSecond);
+
+        if (!isFullOfItems && !(depositIfNotFull && needToDepositDueTooMuchTime)) {
+            return false;
+        }
+
 
         if (walkRoutine(entity)) {
             return true;
         }
 
-        
+
         Optional<BlockPos> candidatePos = WorldUtil.getBlockPos(jobPosBox, true)
             .stream()
             .filter(pos -> world.getBlockState(pos).isIn(ModBlockTagsProvider.STORAGE_BLOCKS))

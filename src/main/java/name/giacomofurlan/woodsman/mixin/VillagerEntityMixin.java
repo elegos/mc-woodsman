@@ -65,6 +65,6 @@ public class VillagerEntityMixin {
         }
 
         World world = villager.getEntityWorld();
-        WorldCache.getInstance().cacheCube(world, jobSite.get().getPos(), WoodsmanWorkTask.OP_DISTANCE);
+        WorldCache.getInstance().cacheCube(world, jobSite.get().getPos(), WoodsmanWorkTask.OP_RADIUS);
     }
 }

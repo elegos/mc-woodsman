@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import name.giacomofurlan.woodsman.Woodsman;
+import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -33,7 +34,6 @@ public class CutTreeActivator extends WalkableActivator {
     @Override
     public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
         if (currentLogsToCut.isEmpty()) {
-            stopWalking(entity);
             Optional<List<BlockPos>> nearestTree = findNearestTree(entity, searchRadius);
 
             // No target tree, no tree found
@@ -44,7 +44,7 @@ public class CutTreeActivator extends WalkableActivator {
             this.currentLogsToCut = new ArrayList<>(nearestTree.get());
         }
 
-        if (!isFollowingPath() && !startWalking(entity, currentLogsToCut.get(0))) {
+        if (!entity.getNavigation().isFollowingPath() && !startWalking(entity, currentLogsToCut.get(0))) {
             // Can't find a path
             // TODO guard condition (to avoid freezing loops)
 
@@ -83,12 +83,12 @@ public class CutTreeActivator extends WalkableActivator {
 
     protected Optional<List<BlockPos>> findNearestTree(VillagerEntity entity, int searchRadius) {
         World world = entity.getWorld();
+        WorldCache worldCache = WorldCache.getInstance();
         BlockPos entityPos = entity.getBlockPos();
 
         List<BlockPos> logsWithinReach = WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(entityPos, searchRadius), true)
             .stream()
-            .filter(pos -> world.getBlockState(pos).isIn(BlockTags.LOGS_THAT_BURN))
-            .limit(5)
+            .filter(pos -> worldCache.getCachedBlock(world, pos).isIn(BlockTags.LOGS_THAT_BURN))
             .toList();
 
         for (BlockPos logPos : logsWithinReach) {

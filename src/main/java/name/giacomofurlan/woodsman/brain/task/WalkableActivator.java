@@ -2,6 +2,7 @@ package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.Optional;
 
+import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -9,8 +10,6 @@ import net.minecraft.util.math.Vec3d;
 
 public abstract class WalkableActivator implements IActivator {
     float walkSpeed;
-
-    Path currentPath;
 
     Vec3d lastKnownPos;
 
@@ -21,6 +20,9 @@ public abstract class WalkableActivator implements IActivator {
     }
 
     protected boolean walkRoutine(VillagerEntity entity) {
+        EntityNavigation navigation = entity.getNavigation();
+        Path currentPath = navigation.getCurrentPath();
+
         if (currentPath == null) {
             return false;
         }
@@ -33,45 +35,49 @@ public abstract class WalkableActivator implements IActivator {
 
         if (lastKnownPos != null && lastKnownPos == entity.getPos()) {
             // Possibly stuck
-            currentPath = entity.getNavigation().findPathTo(currentPath.getEnd().getBlockPos(), 0);
+            navigation.recalculatePath();
         }
 
         lastKnownPos = entity.getPos();
 
-        if (!entity.isNavigating()) {
-            entity.getNavigation().startMovingAlong(currentPath, walkSpeed);
+        if (!navigation.isFollowingPath()) {
+            navigation.tick();
         }
 
         return true;
     }
 
     protected boolean startWalking(VillagerEntity entity, BlockPos pos) {
-        currentPath = entity.getNavigation().findPathTo(pos, 1);
+        Path path = entity.getNavigation().findPathTo(pos, 1);
 
-        return currentPath != null;
+        if (path != null && path.getEnd().getBlockPos().equals(entity.getBlockPos())) {
+            return true;
+        }
+
+        return entity.getNavigation().startMovingAlong(path, walkSpeed);
     }
 
     public boolean hasArrived(VillagerEntity entity) {
+        Path currentPath = entity.getNavigation().getCurrentPath();
+
         return currentPath == null
             || currentPath.isFinished()
             || currentPath.getEnd().getBlockPos().equals(entity.getBlockPos());
     }
 
     protected void stopWalking(VillagerEntity entity) {
+        EntityNavigation navigation = entity.getNavigation();
+
         if (entity.isNavigating()) {
-            entity.getNavigation().stop();
+            navigation.stop();
         }
-
-        currentPath = null;
-    }
-
-    protected boolean isFollowingPath() {
-        return currentPath != null;
     }
     
-    protected Optional<BlockPos> getWalkTarget() {
-        return currentPath != null
-            ? Optional.of(currentPath.getTarget())
+    protected Optional<BlockPos> getWalkTarget(VillagerEntity entity) {
+        BlockPos targetPos = entity.getNavigation().getTargetPos();
+
+        return targetPos != null
+            ? Optional.of(targetPos)
             : Optional.empty();
     }
 }

@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.brain.task.CutTreeActivator;
+import name.giacomofurlan.woodsman.brain.task.CutTreeAroundActivator;
 import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.brain.task.IActivator;
 import name.giacomofurlan.woodsman.brain.task.PickItemsOnTheGroundActivator;
@@ -27,12 +28,14 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
     public static final int SEARCH_RADIUS = 50; // Radius from POI from which the villager should search for and plant new trees
     public static final int MAX_INTERACTION_MANHATTAN_DISTANCE = 16; // Maximum manhattan distance to interact with items
     public static final int OP_DISTANCE = 142; // Sqrt distance of a 200x200 area from the center of the POI
+    public static final int OP_RADIUS = 50; // Sqrt distance of a 200x200 area from the center of the POI
     public static final float WALK_SPEED = 0.4f;
     public static final int DISTANCE_BETWEEN_TREES = 4;
 
     protected long lastCheckedTime = 0;
 
     public static ImmutableList<IActivator> PRIORITIZED_ACTIVATORS = ImmutableList.of(
+        new CutTreeAroundActivator(),
         new PlantSaplingActivator(SEARCH_RADIUS, WALK_SPEED),
         new DepositItemsInChestActivator(false, DEPOSIT_INTERVAL_SECONDS, TICKS_PER_SECOND, OP_DISTANCE, WALK_SPEED),
         new PickItemsOnTheGroundActivator(
@@ -74,6 +77,11 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
 
         // POI-less
         if (optJobSitePos.isEmpty()) {
+            return;
+        }
+
+        if (entity.getNavigation().isFollowingPath()) {
+            Woodsman.LOGGER.debug("Navigating...");
             return;
         }
 

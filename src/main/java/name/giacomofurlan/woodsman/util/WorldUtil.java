@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import net.minecraft.block.BlockState;
+import name.giacomofurlan.woodsman.util.WorldCache.CachedBlock;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -139,6 +139,7 @@ public class WorldUtil {
         Set<BlockPos> visited = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
 
+        WorldCache worldCache = WorldCache.getInstance();
         Boolean foundLeaves = false;
 
         // Add the initial log
@@ -148,10 +149,10 @@ public class WorldUtil {
             BlockPos currentPos = queue.removeFirst();
             visited.add(currentPos);
 
-            BlockState state = world.getBlockState(currentPos);
-            foundLeaves = foundLeaves || state.isIn(BlockTags.LEAVES);
+            CachedBlock cachedBlock = worldCache.getCachedBlock(world, currentPos);
+            foundLeaves = foundLeaves || cachedBlock.isIn(BlockTags.LEAVES);
 
-            if (state.isIn(BlockTags.LOGS_THAT_BURN)) {
+            if (cachedBlock.isIn(BlockTags.LOGS_THAT_BURN)) {
                 result.add(currentPos);
                 queue.addAll(
                     getBlockPos(new Box(currentPos).expand(1))

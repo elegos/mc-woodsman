@@ -3,6 +3,7 @@ package name.giacomofurlan.woodsman.brain.task;
 import java.util.HashMap;
 import java.util.Optional;
 
+import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -21,6 +22,8 @@ import net.minecraft.world.World;
 
 public class PlantSaplingActivator extends WalkableActivator {
     protected int searchRadius;
+
+    public static final int TREE_DISTANCE = 6;
 
     public static final HashMap<Item, Block> SAPLINGS_MAP = new HashMap<>(){{
         put(Items.ACACIA_SAPLING, Blocks.ACACIA_SAPLING);
@@ -63,12 +66,14 @@ public class PlantSaplingActivator extends WalkableActivator {
             return false;
         }
 
-        Optional<BlockPos> walkTarget = getWalkTarget();
-        // walkTarget is set, and so we're arrived at the target (if not we'd have early returned at the beginning of the method)
-        if (walkTarget.isPresent()) {
-            world.setBlockState(walkTarget.get(), SAPLINGS_MAP.get(sapling.getItem()).getDefaultState());
-            inventory.removeItem(sapling.getItem(), 1);
-            stopWalking(entity);
+        BlockPos villagerPos = entity.getBlockPos();
+        Optional<BlockPos> plantablePos = WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(villagerPos, TREE_DISTANCE))
+            .stream()
+            .filter(pos -> isValidPlantPos(world, pos))
+            .findAny();
+
+        if (plantablePos.isPresent()) {
+            plantSapling(entity, plantablePos.get(), sapling);
 
             return true;
         }
@@ -78,21 +83,42 @@ public class PlantSaplingActivator extends WalkableActivator {
             true
         )
             .stream()
-            .filter(pos -> {
-                return world.getBlockState(pos).isAir()
-                    && world.getStatesInBox(new Box(pos).expand(5, 0, 5))
-                        .map(state -> state.isAir() || state.isIn(BlockTags.DIRT))
-                        .reduce(true, (acc, val) -> acc && val)
-                    && world.getBlockState(pos.down()).isIn(BlockTags.DIRT);
-            }).findFirst();
+            .filter(pos -> isValidPlantPos(world, pos)).findFirst();
 
         // no block where to plant
         if (candidatePos.isEmpty()) {
             return false;
         }
 
+        // BlockPos pos = candidatePos.get();
+
+        // if (pos.getManhattanDistance(villagerPos) < 5) {
+        //     plantSapling(entity, pos, sapling);
+
+        //     return true;
+        // }
+
         startWalking(entity, candidatePos.get());
 
         return true;
+    }
+
+    protected static boolean isValidPlantPos(World world, BlockPos pos) {
+        WorldCache worldCache = WorldCache.getInstance();
+
+        return worldCache.getCachedBlock(world, pos).isAir()
+            && worldCache.getCachedBlock(world, pos.down()).isIn(BlockTags.DIRT)
+            && worldCache.getStatesInBox(world, new Box(pos).expand(TREE_DISTANCE, 0, TREE_DISTANCE))
+                .stream()
+                .map(state -> !state.isIn(BlockTags.LOGS_THAT_BURN) && !state.isIn(BlockTags.SAPLINGS))
+                .reduce(true, (acc, val) -> acc && val);
+    }
+
+    protected static void plantSapling(VillagerEntity entity, BlockPos pos, ItemStack sapling) {
+        SimpleInventory inventory = entity.getInventory();
+        World world = entity.getWorld();
+
+        world.setBlockState(pos, SAPLINGS_MAP.get(sapling.getItem()).getDefaultState());
+        inventory.removeItem(sapling.getItem(), 1);
     }
 }

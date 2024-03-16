@@ -37,17 +37,12 @@ public class PickItemsOnTheGroundActivator extends WalkableActivator {
         // Pick any item during the course of action
         world.getEntitiesByClass(
             ItemEntity.class,
-            Box.enclosing(entityPos.mutableCopy().add(2, 6, 2), entityPos.mutableCopy().add(-3, 0, -3)),
+            getReachBox(entityPos),
             this::checkItemOnGround
         ).forEach(itemEntity -> {
             entity.getInventory().addStack(itemEntity.getStack()).toString();
             itemEntity.remove(RemovalReason.DISCARDED);
         });
-
-        // Moving to next item to collect
-        if (walkRoutine(entity)) {
-            return true;
-        }
 
         // Search for the next item(s) to collect
         Optional<BlockPos> nearestItem = entity.getWorld().getEntitiesByClass(
@@ -60,6 +55,10 @@ public class PickItemsOnTheGroundActivator extends WalkableActivator {
         ).stream()
             .map(itemEntity -> itemEntity.getBlockPos())
             .sorted(Comparator.comparingDouble(pos -> pos.getSquaredDistance(entityPos)))
+            .filter(
+                pos -> getReachBox(entity.getNavigation().findPathTo(pos, 0).getEnd().getBlockPos())
+                    .contains((double) pos.getX(), (double) pos.getY(), (double) pos.getZ())
+            )
             .findFirst();
 
         if (nearestItem.isEmpty()) {
@@ -74,4 +73,7 @@ public class PickItemsOnTheGroundActivator extends WalkableActivator {
             || itemsToPick.stream().anyMatch(item -> itemEntity.getStack().getItem().equals(item));
     }
 
+    protected Box getReachBox(BlockPos pos) {
+        return Box.enclosing(pos.down(3).west(2).north(2), pos.up(6).east(2).south(2));
+    }
 }
