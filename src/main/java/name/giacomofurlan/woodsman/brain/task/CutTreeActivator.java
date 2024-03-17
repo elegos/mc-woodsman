@@ -11,7 +11,6 @@ import java.util.Set;
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
-import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +31,12 @@ public class CutTreeActivator extends WalkableActivator {
     }
 
     @Override
-    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+    public boolean shouldRun(VillagerEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean run(VillagerEntity entity) {
         if (currentLogsToCut.isEmpty()) {
             Optional<List<BlockPos>> nearestTree = findNearestTree(entity, searchRadius);
 

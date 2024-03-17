@@ -21,7 +21,12 @@ import net.minecraft.world.World;
 public class CutTreeAroundActivator implements IActivator {
 
     @Override
-    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+    public boolean shouldRun(VillagerEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean run(VillagerEntity entity) {
         World world = entity.getWorld();
 
         ImmutableList.Builder<BlockPos> leafBuilder = ImmutableList.<BlockPos>builder();
@@ -36,6 +41,7 @@ public class CutTreeAroundActivator implements IActivator {
             .add(entity.getBlockPos().up().up())
             .build();
 
+        Brain<VillagerEntity> brain = entity.getBrain();
         for (BlockPos pos : leafPos) {
             BlockState blockState = world.getBlockState(pos);
             if (blockState.isIn(BlockTags.LEAVES) || blockState.isIn(BlockTags.LOGS_THAT_BURN)) {

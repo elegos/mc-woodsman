@@ -7,7 +7,6 @@ import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.inventory.SimpleInventory;
@@ -42,7 +41,12 @@ public class PlantSaplingActivator extends WalkableActivator {
     }
 
     @Override
-    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+    public boolean shouldRun(VillagerEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean run(VillagerEntity entity) {
         if (walkRoutine(entity)) {
             return true;
         }
@@ -79,7 +83,7 @@ public class PlantSaplingActivator extends WalkableActivator {
         }
 
         Optional<BlockPos> candidatePos = WorldUtil.getBlockPos(
-            new Box(brain.getOptionalMemory(MemoryModuleType.JOB_SITE).get().getPos()).expand(searchRadius),
+            new Box(entity.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE).get().getPos()).expand(searchRadius),
             true
         )
             .stream()

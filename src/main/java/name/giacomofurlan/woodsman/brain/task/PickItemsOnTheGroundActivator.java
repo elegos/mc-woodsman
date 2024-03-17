@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import net.minecraft.entity.Entity.RemovalReason;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.registry.tag.TagKey;
@@ -30,7 +29,12 @@ public class PickItemsOnTheGroundActivator extends WalkableActivator {
     }
 
     @Override
-    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+    public boolean shouldRun(VillagerEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean run(VillagerEntity entity) {
         World world = entity.getWorld();
         BlockPos entityPos = entity.getBlockPos();
 

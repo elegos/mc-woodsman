@@ -3,6 +3,7 @@ package name.giacomofurlan.woodsman.util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -164,5 +165,15 @@ public class WorldUtil {
         }
 
         return foundLeaves ? Optional.of(result) : Optional.empty();
+    }
+
+    public static Optional<BlockPos> findNextWalkableBlockToTarget(BlockPos start, BlockPos end) {
+        Box box = new Box(start.getX(), start.getY(), start.getZ(), start.getX(), start.getY(), start.getZ()).expand(1);
+        List<BlockPos> blocks = getBlockPos(box);
+
+        return blocks.stream()
+            .sorted(Comparator.comparingDouble(pos -> pos.getSquaredDistance(end)))
+            .filter(pos -> pos.getManhattanDistance(start) == 1)
+            .findFirst();
     }
 }

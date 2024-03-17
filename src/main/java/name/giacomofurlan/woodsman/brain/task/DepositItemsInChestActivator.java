@@ -5,7 +5,6 @@ import java.util.Optional;
 import name.giacomofurlan.woodsman.datagen.ModBlockTagsProvider;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.block.entity.LootableContainerBlockEntity;
-import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.inventory.SimpleInventory;
@@ -41,7 +40,12 @@ public class DepositItemsInChestActivator extends WalkableActivator {
     }
 
     @Override
-    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+    public boolean shouldRun(VillagerEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean run(VillagerEntity entity) {
         MinecraftServer server = entity.getServer();
 
         if (lastDepositTick == null) {
@@ -71,7 +75,7 @@ public class DepositItemsInChestActivator extends WalkableActivator {
 
         
         World world = entity.getWorld();
-        Optional<GlobalPos> jobPos = brain.getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
+        Optional<GlobalPos> jobPos = entity.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
         Box jobPosBox = new Box(jobPos.get().getPos()).expand(10);
         
         Boolean chestAroundChopBlock = WorldUtil.getBlockPos(jobPosBox)

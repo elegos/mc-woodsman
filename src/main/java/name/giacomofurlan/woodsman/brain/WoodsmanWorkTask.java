@@ -1,7 +1,6 @@
 package name.giacomofurlan.woodsman.brain;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 
@@ -12,7 +11,6 @@ import name.giacomofurlan.woodsman.brain.task.DepositItemsInChestActivator;
 import name.giacomofurlan.woodsman.brain.task.IActivator;
 import name.giacomofurlan.woodsman.brain.task.PickItemsOnTheGroundActivator;
 import name.giacomofurlan.woodsman.brain.task.PlantSaplingActivator;
-import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.VillagerWorkTask;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -72,27 +70,29 @@ public class WoodsmanWorkTask extends VillagerWorkTask {
 
     @Override
     protected void performAdditionalWork(ServerWorld world, VillagerEntity entity) {
-        Brain<VillagerEntity> brain = entity.getBrain();
-        Optional<GlobalPos> optJobSitePos = brain.getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
+        // Brain<VillagerEntity> brain = entity.getBrain();
+        // Optional<GlobalPos> optJobSitePos = brain.getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
 
-        // POI-less
-        if (optJobSitePos.isEmpty()) {
-            return;
-        }
+        Woodsman.LOGGER.debug("WoodsmanWorkTask::performAdditionalWork Old code");
 
-        if (entity.getNavigation().isFollowingPath()) {
-            Woodsman.LOGGER.debug("Navigating...");
-            return;
-        }
+        // // POI-less
+        // if (optJobSitePos.isEmpty()) {
+        //     return;
+        // }
 
-        for (IActivator activator : PRIORITIZED_ACTIVATORS) {
-            if (activator.run(entity, brain)) {
-                Woodsman.LOGGER.debug("Current action: {}", activator.getClass().getSimpleName());
+        // if (entity.getNavigation().isFollowingPath()) {
+        //     Woodsman.LOGGER.debug("Navigating...");
+        //     return;
+        // }
 
-                return;
-            }
-        }
+        // for (IActivator activator : PRIORITIZED_ACTIVATORS) {
+        //     if (activator.run(entity)) {
+        //         Woodsman.LOGGER.debug("Current action: {}", activator.getClass().getSimpleName());
 
-        Woodsman.LOGGER.debug("No activator was found");
+        //         return;
+        //     }
+        // }
+
+        // Woodsman.LOGGER.debug("No activator was found");
     }
 }

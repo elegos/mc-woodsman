@@ -12,7 +12,14 @@ import net.minecraft.util.math.GlobalPos;
 public class ReturnToPOIActivator implements IActivator {
 
     @Override
-    public boolean run(VillagerEntity entity, Brain<VillagerEntity> brain) {
+    public boolean shouldRun(VillagerEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean run(VillagerEntity entity) {
+        Brain<VillagerEntity> brain = entity.getBrain();
+
         if (brain.getOptionalMemory(MemoryModuleType.WALK_TARGET).isPresent()) {
             return false;
         }

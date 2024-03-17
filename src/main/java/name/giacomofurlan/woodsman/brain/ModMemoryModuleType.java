@@ -1,18 +1,19 @@
 package name.giacomofurlan.woodsman.brain;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 
 import name.giacomofurlan.woodsman.Woodsman;
-import net.minecraft.entity.ai.brain.LookTarget;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 public class ModMemoryModuleType {
-    public static MemoryModuleType<LookTarget> LOOK_TARGET = register("look_target");
+    public static MemoryModuleType<List<BlockPos>> TARGET_TREE = register("target_tree");
 
     protected static String getIdentifier(String id) {
         return new Identifier(Woodsman.MOD_ID, "memory." + id).toString();
