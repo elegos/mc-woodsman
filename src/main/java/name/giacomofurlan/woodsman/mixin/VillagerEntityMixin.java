@@ -44,7 +44,7 @@ public class VillagerEntityMixin {
             MemoryModuleType.HEARD_BELL_TIME, MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.LAST_SLEPT,
             MemoryModuleType.LAST_WOKEN, MemoryModuleType.LAST_WORKED_AT_POI, MemoryModuleType.GOLEM_DETECTED_RECENTLY,
             // Custom memory modules
-            ModMemoryModuleType.TARGET_TREE
+            ModMemoryModuleType.TARGET_TREE, ModMemoryModuleType.CURRENT_WOODSMAN_TASK
         });
 
     @ModifyReturnValue(method = "createBrainProfile", at = @At("RETURN"))

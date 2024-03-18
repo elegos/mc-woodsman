@@ -1,5 +1,6 @@
 package name.giacomofurlan.woodsman.brain.task;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.GlobalPos;
 import net.minecraft.world.World;
 
 /**
@@ -29,9 +31,12 @@ public class LuberjackTask extends VillagerWorkTask {
     protected float walkSpeed;
 
     protected long lastCheckedTime;
+    protected List<GlobalPos> bannedTreeList;
 
     public LuberjackTask(int searchRadius, float walkSpeed) {
         super();
+
+        this.bannedTreeList = new ArrayList<>();
 
         this.searchRadius = searchRadius;
         this.walkSpeed = walkSpeed;
@@ -64,17 +69,21 @@ public class LuberjackTask extends VillagerWorkTask {
      */
     @Override
     protected boolean shouldKeepRunning(ServerWorld serverWorld, VillagerEntity villagerEntity, long l) {
+        Optional<String> currentTask = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
         Optional<List<BlockPos>> targetTree = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.TARGET_TREE);
 
-        return targetTree.isPresent() && !targetTree.get().isEmpty();
+        return (currentTask.isEmpty() || currentTask.get().equals(LuberjackTask.class.getName()))
+            && targetTree.isPresent() && !targetTree.get().isEmpty();
     }
 
     @Override
     protected void run(ServerWorld serverWorld, VillagerEntity villagerEntity, long l) {
         Brain<VillagerEntity> brain = villagerEntity.getBrain();
         Optional<List<BlockPos>> targetTree = brain.getOptionalMemory(ModMemoryModuleType.TARGET_TREE);
+        EntityNavigation navigation = villagerEntity.getNavigation();
 
         if (targetTree.isEmpty()) {
+            navigation.stop();
             targetTree = findNearestTree(villagerEntity, searchRadius);
 
             if (targetTree.isEmpty()) {
@@ -84,9 +93,10 @@ public class LuberjackTask extends VillagerWorkTask {
             brain.remember(ModMemoryModuleType.TARGET_TREE, targetTree.get());
         }
 
+        brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, LuberjackTask.class.getName());
+
         BlockPos targetTreePos = targetTree.get().get(0);
         BlockPos villagerPos = villagerEntity.getBlockPos();
-        EntityNavigation navigation = villagerEntity.getNavigation();
         Path currentPath = navigation.getCurrentPath();
 
         if (currentPath == null) {
@@ -104,7 +114,11 @@ public class LuberjackTask extends VillagerWorkTask {
 
             Optional<BlockPos> nextBlock = WorldUtil.findNextWalkableBlockToTarget(villagerPos, targetTreePos);
             if (nextBlock.isEmpty()) {
-                Woodsman.LOGGER.debug("NOT IMPLEMENTED YET!");
+                Woodsman.LOGGER.debug("Can't reach the position, banning the tree root position...");
+
+                bannedTreeList.add(GlobalPos.create(serverWorld.getRegistryKey(), targetTreePos));
+                navigation.stop();
+
                 return;
             }
             List.of(nextBlock.get(), nextBlock.get().up()).forEach(blockPos -> {
@@ -122,6 +136,7 @@ public class LuberjackTask extends VillagerWorkTask {
         villagerEntity.getWorld().breakBlock(targetTreePos, true);
         if (targetTree.get().size() == 1) {
             villagerEntity.getBrain().forget(ModMemoryModuleType.TARGET_TREE);
+            villagerEntity.getBrain().forget(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
         } else {
             villagerEntity.getBrain().remember(ModMemoryModuleType.TARGET_TREE, targetTree.get().subList(1, targetTree.get().size()));
         }
@@ -134,7 +149,7 @@ public class LuberjackTask extends VillagerWorkTask {
 
         List<BlockPos> logsWithinReach = WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(entityPos, searchRadius), true)
             .stream()
-            .filter(pos -> worldCache.getCachedBlock(world, pos).isIn(BlockTags.LOGS_THAT_BURN))
+            .filter(pos -> !bannedTreeList.contains(GlobalPos.create(world.getRegistryKey(), pos)) && worldCache.getCachedBlock(world, pos).isIn(BlockTags.LOGS_THAT_BURN))
             .toList();
 
         for (BlockPos logPos : logsWithinReach) {
