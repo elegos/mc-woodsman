@@ -17,7 +17,12 @@ public class WorldMixin {
     // BlockPos pos, BlockState state, int flags, int maxUpdateDepth
     @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;II)Z", at = @At("TAIL"), cancellable = true)
     private void setBlockState(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
-        WorldCache.getInstance().updateCache(((World)(Object) this).getRegistryKey().getValue().toString(), pos, state, false);
+        WorldCache.getInstance().updateCache(((World)(Object) this).getRegistryKey().getValue().toString(), pos, state, true);
+    }
+
+    @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z", at = @At("TAIL"), cancellable = true)
+    private void setBlockState(BlockPos pos, BlockState state, CallbackInfoReturnable<Boolean> cir) {
+        WorldCache.getInstance().updateCache(((World)(Object) this).getRegistryKey().getValue().toString(), pos, state, true);
     }
 
     @Inject(method = "breakBlock", at = @At("TAIL"), cancellable = true)
@@ -25,6 +30,6 @@ public class WorldMixin {
         @SuppressWarnings("resource")
         World world = (World)(Object) this;
 
-        WorldCache.getInstance().updateCache(world.getRegistryKey().getValue().toString(), pos, world.getBlockState(pos), false);
+        WorldCache.getInstance().updateCache(world.getRegistryKey().getValue().toString(), pos, world.getBlockState(pos), true);
     }
 }

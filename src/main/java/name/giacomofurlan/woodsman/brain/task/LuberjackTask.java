@@ -48,7 +48,7 @@ public class LuberjackTask extends VillagerWorkTask {
     @Override
     protected boolean shouldRun(ServerWorld serverWorld, VillagerEntity villagerEntity) {
         Optional<String> currentTask = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
-        if (currentTask.isPresent() && !currentTask.get().equals(LuberjackTask.class.getName())) {
+        if (currentTask.isPresent() && !currentTask.get().equals(getName())) {
             return false;
         }
 
@@ -77,7 +77,7 @@ public class LuberjackTask extends VillagerWorkTask {
         Optional<String> currentTask = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
         Optional<List<BlockPos>> targetTree = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.TARGET_TREE);
 
-        if (currentTask.isPresent() && !currentTask.get().equals(LuberjackTask.class.getName())) {
+        if (currentTask.isPresent() && !currentTask.get().equals(getName())) {
             return false;
         }
 
@@ -107,7 +107,7 @@ public class LuberjackTask extends VillagerWorkTask {
             brain.remember(ModMemoryModuleType.TARGET_TREE, targetTree.get());
         }
 
-        brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, LuberjackTask.class.getName());
+        brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, getName());
 
         BlockPos targetTreePos = targetTree.get().get(0);
         BlockPos villagerPos = villagerEntity.getBlockPos();
@@ -120,7 +120,7 @@ public class LuberjackTask extends VillagerWorkTask {
             return;
         } else if (villagerEntity.isNavigating()) {
             // Still not there yet
-            Woodsman.LOGGER.debug("LumberjackTask: Navigating...");
+            Woodsman.LOGGER.debug("{}: Navigating...", getName());
             return;
         } else if (currentPath.getTarget().mutableCopy().setY(villagerPos.getY()).getManhattanDistance(villagerPos) > 1) {
             // Not navigating, but still not there yet

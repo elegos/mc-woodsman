@@ -35,6 +35,8 @@ public class PickupItemsTask extends VillagerWorkTask {
 
     public PickupItemsTask(int searchRadius, float walkSpeed, List<TagKey<Item>> itemTagsToPick,
             List<Item> itemsToPick) {
+        super();
+
         this.searchRadius = searchRadius;
         this.walkSpeed = walkSpeed;
         this.itemTagsToPick = itemTagsToPick;
@@ -50,7 +52,7 @@ public class PickupItemsTask extends VillagerWorkTask {
         Brain<VillagerEntity> brain = villagerEntity.getBrain();
         Optional<String> currentTask = brain.getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
 
-        if (currentTask.isPresent() && !currentTask.get().equals(PickupItemsTask.class.getName())) {
+        if (currentTask.isPresent() && !currentTask.get().equals(getName())) {
             return false;
         }
 
@@ -75,7 +77,7 @@ public class PickupItemsTask extends VillagerWorkTask {
 
         Optional<String> currentTask = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
 
-        return (currentTask.isPresent() && currentTask.get().equals(PickupItemsTask.class.getName()))
+        return (currentTask.isPresent() && currentTask.get().equals(getName()))
             && villagerEntity.isNavigating();
     }
 
@@ -106,7 +108,7 @@ public class PickupItemsTask extends VillagerWorkTask {
         }
 
         if (villagerEntity.isNavigating()) {
-            Woodsman.LOGGER.debug("PickupItemsTask: Navigating...");
+            Woodsman.LOGGER.debug("{}: Navigating...", getName());
 
             return;
         }
@@ -116,7 +118,7 @@ public class PickupItemsTask extends VillagerWorkTask {
         if (!nearestItemOnGroundPos.isEmpty()) {
             Woodsman.LOGGER.debug("Moving to pick items around ({})", nearestItemOnGroundPos.get().toShortString());
             navigation.startMovingAlong(navigation.findPathTo(nearestItemOnGroundPos.get(), 1), walkSpeed);
-            brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, PickupItemsTask.class.getName());
+            brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, getName());
 
             return;
         }

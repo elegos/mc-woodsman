@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
-import name.giacomofurlan.woodsman.brain.WoodsmanWorkTask;
 import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.villager.ModVillagers;
 import net.minecraft.entity.ai.brain.Brain;
@@ -44,7 +43,7 @@ public class VillagerEntityMixin {
             MemoryModuleType.HEARD_BELL_TIME, MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.LAST_SLEPT,
             MemoryModuleType.LAST_WOKEN, MemoryModuleType.LAST_WORKED_AT_POI, MemoryModuleType.GOLEM_DETECTED_RECENTLY,
             // Custom memory modules
-            ModMemoryModuleType.TARGET_TREE, ModMemoryModuleType.CURRENT_WOODSMAN_TASK
+            ModMemoryModuleType.TARGET_TREE, ModMemoryModuleType.CURRENT_WOODSMAN_TASK, ModMemoryModuleType.SAPLING_TARGET_POS
         });
 
     @ModifyReturnValue(method = "createBrainProfile", at = @At("RETURN"))
@@ -65,6 +64,6 @@ public class VillagerEntityMixin {
         }
 
         World world = villager.getEntityWorld();
-        WorldCache.getInstance().cacheCube(world, jobSite.get().getPos(), WoodsmanWorkTask.OP_RADIUS);
+        WorldCache.getInstance().cacheCube(world, jobSite.get().getPos(), 50);
     }
 }

@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 public class ModMemoryModuleType {
     public static MemoryModuleType<List<BlockPos>> TARGET_TREE = register("target_tree");
     public static MemoryModuleType<String> CURRENT_WOODSMAN_TASK = register("current_woodsman_task");
+    public static MemoryModuleType<BlockPos> SAPLING_TARGET_POS = register("sapling_target_pos");
 
     protected static String getIdentifier(String id) {
         return new Identifier(Woodsman.MOD_ID, "memory." + id).toString();
