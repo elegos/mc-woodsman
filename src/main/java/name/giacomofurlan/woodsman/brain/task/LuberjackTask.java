@@ -47,6 +47,11 @@ public class LuberjackTask extends VillagerWorkTask {
      */
     @Override
     protected boolean shouldRun(ServerWorld serverWorld, VillagerEntity villagerEntity) {
+        Optional<String> currentTask = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
+        if (currentTask.isPresent() && !currentTask.get().equals(LuberjackTask.class.getName())) {
+            return false;
+        }
+
         if (serverWorld.getTime() - this.lastCheckedTime < 60L) {
             return false;
         }
@@ -72,8 +77,17 @@ public class LuberjackTask extends VillagerWorkTask {
         Optional<String> currentTask = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
         Optional<List<BlockPos>> targetTree = villagerEntity.getBrain().getOptionalMemory(ModMemoryModuleType.TARGET_TREE);
 
-        return (currentTask.isEmpty() || currentTask.get().equals(LuberjackTask.class.getName()))
-            && targetTree.isPresent() && !targetTree.get().isEmpty();
+        if (currentTask.isPresent() && !currentTask.get().equals(LuberjackTask.class.getName())) {
+            return false;
+        }
+
+        if (targetTree.isPresent() && targetTree.get().isEmpty()) {
+            villagerEntity.getBrain().forget(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
+
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -106,7 +120,7 @@ public class LuberjackTask extends VillagerWorkTask {
             return;
         } else if (villagerEntity.isNavigating()) {
             // Still not there yet
-            Woodsman.LOGGER.debug("Navigating...");
+            Woodsman.LOGGER.debug("LumberjackTask: Navigating...");
             return;
         } else if (currentPath.getTarget().mutableCopy().setY(villagerPos.getY()).getManhattanDistance(villagerPos) > 1) {
             // Not navigating, but still not there yet
