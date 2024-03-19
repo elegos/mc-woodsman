@@ -1,16 +1,15 @@
 package name.giacomofurlan.woodsman.brain.task;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
 import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.ai.brain.Brain;
+import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.VillagerWorkTask;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
@@ -26,14 +25,14 @@ import net.minecraft.world.World;
 /**
  * Luberjack activity
  */
-public class LuberjackTask extends VillagerWorkTask {
+public class LumberjackTask extends VillagerWorkTask {
     protected int searchRadius;
     protected float walkSpeed;
 
     protected long lastCheckedTime;
     protected List<GlobalPos> bannedTreeList;
 
-    public LuberjackTask(int searchRadius, float walkSpeed) {
+    public LumberjackTask(int searchRadius, float walkSpeed) {
         super();
 
         this.bannedTreeList = new ArrayList<>();
@@ -65,6 +64,8 @@ public class LuberjackTask extends VillagerWorkTask {
                 numOccupiedStacks++;
             }
         }
+
+        villagerEntity.getBrain().remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, getName());
 
         return numOccupiedStacks < inventory.size();
     }
@@ -136,7 +137,7 @@ public class LuberjackTask extends VillagerWorkTask {
                 return;
             }
             List.of(nextBlock.get(), nextBlock.get().up()).forEach(blockPos -> {
-                if (WorldCache.getInstance().getCachedBlock(serverWorld, blockPos).isIn(BlockTags.LEAVES)) {
+                if (serverWorld.getBlockState(blockPos).isIn(BlockTags.LEAVES)) {
                     serverWorld.breakBlock(blockPos, true);
                 }
             });
@@ -151,29 +152,21 @@ public class LuberjackTask extends VillagerWorkTask {
         if (targetTree.get().size() == 1) {
             villagerEntity.getBrain().forget(ModMemoryModuleType.TARGET_TREE);
             villagerEntity.getBrain().forget(ModMemoryModuleType.CURRENT_WOODSMAN_TASK);
+            Optional<GlobalPos> jobSite = villagerEntity.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE);
+            WorldCache.cacheTrees(serverWorld, jobSite.get().getPos(), 50);
         } else {
             villagerEntity.getBrain().remember(ModMemoryModuleType.TARGET_TREE, targetTree.get().subList(1, targetTree.get().size()));
         }
     }
-
+    
     protected Optional<List<BlockPos>> findNearestTree(VillagerEntity entity, int searchRadius) {
+        Optional<GlobalPos> jobSite = entity.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE);
         World world = entity.getWorld();
-        WorldCache worldCache = WorldCache.getInstance();
-        BlockPos entityPos = entity.getBlockPos();
 
-        List<BlockPos> logsWithinReach = WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(entityPos, searchRadius), true)
-            .stream()
-            .filter(pos -> !bannedTreeList.contains(GlobalPos.create(world.getRegistryKey(), pos)) && worldCache.getCachedBlock(world, pos).isIn(BlockTags.LOGS_THAT_BURN))
-            .toList();
-
-        for (BlockPos logPos : logsWithinReach) {
-            Optional<Set<BlockPos>> tree = WorldUtil.getTreeLogsPosFromAnyLog(world, logPos);
-
-            if (tree.isPresent()) {
-                return Optional.of(tree.get().stream().sorted(Comparator.comparingDouble(pos -> pos.getY())).toList());
-            }
+        if (jobSite.isEmpty() || jobSite.get().getDimension() != world.getRegistryKey()) {
+            return Optional.empty();
         }
 
-        return Optional.empty();
+        return WorldCache.getNearestTreeFromCache(jobSite.get());
     }
 }

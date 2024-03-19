@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
-import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -64,6 +63,8 @@ public class PlantSaplingTask extends VillagerWorkTask {
             return false;
         }
         this.lastCheckedTime = serverWorld.getTime();
+
+        brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, getName());
 
         return true;
     }
@@ -126,8 +127,6 @@ public class PlantSaplingTask extends VillagerWorkTask {
     }
 
     private Optional<BlockPos> getNearestPlantLocation(ItemStack sapling, World world, BlockPos centerPos, int radius) {
-        WorldCache cache = WorldCache.getInstance();
-
         // TODO special algorithm for dark oak sapling (2x2 planting)
         
         // It needs to be air
@@ -136,9 +135,8 @@ public class PlantSaplingTask extends VillagerWorkTask {
         return WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(centerPos, radius), true)
             .stream()
             .filter(pos -> world.getBlockState(pos).isAir()
-                && cache.getCachedBlock(world, pos.down()).isIn(BlockTags.DIRT)
-                && !cache.getStatesInBox(world, WorldUtil.cubicBoxFromCenter(pos, 5))
-                    .stream()
+                && world.getBlockState(pos.down()).isIn(BlockTags.DIRT)
+                && !world.getStatesInBox(WorldUtil.cubicBoxFromCenter(pos, 5))
                     .anyMatch(posState -> posState.isIn(BlockTags.SAPLINGS) || posState.isIn(BlockTags.LOGS_THAT_BURN)))
             .findFirst();
     }

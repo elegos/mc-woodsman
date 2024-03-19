@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 
-import name.giacomofurlan.woodsman.brain.task.LuberjackTask;
+import name.giacomofurlan.woodsman.brain.task.LumberjackTask;
 import name.giacomofurlan.woodsman.brain.task.PickupItemsTask;
 import name.giacomofurlan.woodsman.brain.task.PlantSaplingTask;
 import name.giacomofurlan.woodsman.villager.ModVillagers;
@@ -33,7 +33,7 @@ public class VillagerTaskListProviderMixin {
     private static final ImmutableList<Pair<Integer, ? extends Task<? super VillagerEntity>>> woodsmanTaskList = ImmutableList.of(
         Pair.of(2, new PlantSaplingTask(SEARCH_RADIUS, WALK_SPEED)),
         Pair.of(3, new PickupItemsTask(SEARCH_RADIUS, WALK_SPEED, ITEM_TAGS_TO_PICK, ITEMS_TO_PICK)),
-        Pair.of(4, new LuberjackTask(SEARCH_RADIUS, WALK_SPEED))
+        Pair.of(4, new LumberjackTask(SEARCH_RADIUS, WALK_SPEED))
     );
 
     @Inject(method = "createWorkTasks", at = @At("INVOKE"), cancellable = true)

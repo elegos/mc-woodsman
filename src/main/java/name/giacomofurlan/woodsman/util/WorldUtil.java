@@ -11,7 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import name.giacomofurlan.woodsman.util.WorldCache.CachedBlock;
+import name.giacomofurlan.woodsman.Woodsman;
+import net.minecraft.block.BlockState;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -21,6 +22,8 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 
 public class WorldUtil {
+    protected static List<BlockPos> cachedBoxPosFromCenter = generateNormalizedBlockPosFromCenter(50);
+
     /**
      * @see WorldUtil.cubicCoordinatesFromCenter
      */
@@ -93,15 +96,18 @@ public class WorldUtil {
         return new Box(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
-    public static List<BlockPos> getBlockPos(Box box, Boolean fromCenter) {
-        List<BlockPos> result = new ArrayList<>();
+    protected static List<BlockPos> generateNormalizedBlockPosFromCenter(int distance) {
+        Woodsman.LOGGER.debug("Generating normalized block positions from center of a cube of {} blocks", distance);
+        Box box = cubicBoxFromCenter(new Vec3i(0, 0, 0), distance);
 
+        List<BlockPos> result = new ArrayList<>();
         List<Integer> xList, yList, zList;
 
         xList = new ArrayList<>(IntStream.rangeClosed((int) box.getMin(Axis.X), (int)box.getMax(Axis.X)).boxed().toList());
         yList = new ArrayList<>(IntStream.rangeClosed((int) box.getMin(Axis.Y), (int)box.getMax(Axis.Y)).boxed().toList());
         zList = new ArrayList<>(IntStream.rangeClosed((int) box.getMin(Axis.Z), (int)box.getMax(Axis.Z)).boxed().toList());
 
+        // Generate the block positions, ordered by x, y, z ascending
         for (int x : xList) {
             for (int y : yList) {
                 for (int z : zList) {
@@ -110,12 +116,43 @@ public class WorldUtil {
             }
         }
 
-        // Randomize to avoid any bias
-        if (fromCenter) {
-            Vec3d center = box.getCenter();
-            Collections.shuffle(result);
-            result.sort((a, b) -> Double.compare(a.getSquaredDistance(center), b.getSquaredDistance(center)));
+        Vec3d center = box.getCenter();
+        // Shuffle to prevent any bias
+        Collections.shuffle(result);
+        result.sort((a, b) -> Double.compare(a.getSquaredDistance(center), b.getSquaredDistance(center)));
+
+        Woodsman.LOGGER.debug("Generated {} normalized block positions from center of a cube of {} blocks", result.size(), distance);
+
+        return result;
+    }
+
+    public static List<BlockPos> getBlockPos(Box box, Boolean fromCenter) {
+        List<BlockPos> result = new ArrayList<>();
+
+        if (!fromCenter) {
+            for (int x = (int) box.minX; x <= box.maxX; x++) {
+                for (int y = (int) box.minY; y <= box.maxY; y++) {
+                    for (int z = (int) box.minZ; z <= box.maxZ; z++) {
+                        result.add(new BlockPos(x, y, z));
+                    }
+                }
+            }
+
+            return result;
         }
+
+        int deltaX = (int) box.getCenter().getX();
+        int deltaY = (int) box.getCenter().getY();
+        int deltaZ = (int) box.getCenter().getZ();
+        BlockPos centerPos = new BlockPos(deltaX, deltaY, deltaZ);
+
+        result.addAll(
+            cachedBoxPosFromCenter
+                .stream()
+                .filter(pos -> box.contains(pos.getX() + deltaX, pos.getY() + deltaY, pos.getZ() + deltaZ))
+                .map(pos -> pos.add(centerPos))
+                .toList()
+        );
 
         return result;
     }
@@ -140,7 +177,6 @@ public class WorldUtil {
         Set<BlockPos> visited = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
 
-        WorldCache worldCache = WorldCache.getInstance();
         Boolean foundLeaves = false;
 
         // Add the initial log
@@ -150,13 +186,13 @@ public class WorldUtil {
             BlockPos currentPos = queue.removeFirst();
             visited.add(currentPos);
 
-            CachedBlock cachedBlock = worldCache.getCachedBlock(world, currentPos);
-            foundLeaves = foundLeaves || cachedBlock.isIn(BlockTags.LEAVES);
+            BlockState blockState = world.getBlockState(currentPos);
+            foundLeaves = foundLeaves || blockState.isIn(BlockTags.LEAVES);
 
-            if (cachedBlock.isIn(BlockTags.LOGS_THAT_BURN)) {
+            if (blockState.isIn(BlockTags.LOGS_THAT_BURN)) {
                 result.add(currentPos);
                 queue.addAll(
-                    getBlockPos(new Box(currentPos).expand(1))
+                    getBlockPos(new Box(currentPos.getX(), currentPos.getY(), currentPos.getZ(), currentPos.getX(), currentPos.getY(), currentPos.getZ()).expand(1))
                         .stream()
                         .filter(pos -> !visited.contains(pos))
                         .toList()

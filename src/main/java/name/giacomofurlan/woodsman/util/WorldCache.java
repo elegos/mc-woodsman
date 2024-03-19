@@ -1,131 +1,73 @@
 package name.giacomofurlan.woodsman.util;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import name.giacomofurlan.woodsman.Woodsman;
-import name.giacomofurlan.woodsman.datagen.ModBlockTagsProvider;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+import net.minecraft.util.math.GlobalPos;
 import net.minecraft.world.World;
 
 public class WorldCache {
-    protected static WorldCache instance;
+    protected static Map<RegistryKey<World>, Map<BlockPos, List<BlockPos>>> treeCache = new HashMap<>();
 
-    protected Map<String, Map<BlockPos, BlockState>> stateCache;
-
-    public class CachedBlock {
-        protected Optional<BlockState> blockState;
-
-        public CachedBlock(Optional<BlockState> blockState) {
-            this.blockState = blockState;
+    public static void cacheTrees(World world, BlockPos pos, int radius) {
+        if (!treeCache.containsKey(world.getRegistryKey())) {
+            treeCache.put(world.getRegistryKey(), new HashMap<>());
         }
 
-        public boolean isIn(TagKey<Block> blockTags) {
-            return blockState.isPresent() && blockState.get().isIn(blockTags);
-        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                Woodsman.LOGGER.debug("Caching trees in {} for {} blocks radius from center ({})", world.getRegistryKey().getValue(), radius, pos.toShortString());
+                Map<BlockPos, List<BlockPos>> dimensionCache = treeCache.get(world.getRegistryKey());
 
-        public boolean isAir() {
-            return blockState.isPresent() && blockState.get().isAir();
-        }
+                dimensionCache.clear();
+
+                WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(pos, radius))
+                    .stream()
+                    .filter(blockPos -> world.getBlockState(blockPos).isIn(BlockTags.LOGS_THAT_BURN))
+                    .forEach(blockPos -> {
+                        Optional<Set<BlockPos>> treeLogs = WorldUtil.getTreeLogsPosFromAnyLog(world, blockPos);
+                        if (treeLogs.isEmpty()) {
+                            return;
+                        }
+
+                        List<BlockPos> logsToCache = treeLogs.get().stream().sorted(Comparator.comparingDouble(logPos -> logPos.getY())).toList();
+                        dimensionCache.put(logsToCache.get(0), logsToCache);
+                    });
+                
+                Woodsman.LOGGER.debug("Cached trees in {} for {} blocks radius from center ({})", world.getRegistryKey().getValue(), radius, pos.toShortString());
+            }
+        };
+
+        Thread thread = new Thread(runnable);
+
+        thread.start();
     }
 
-    public static WorldCache getInstance() {
-        if (instance == null) {
-            instance = new WorldCache();
-        }
-        return instance;
-    }
-
-    protected WorldCache() {
-        stateCache = new HashMap<>();
-    }
-
-    protected String getDimensionKey(World world) {
-        return world.getRegistryKey().getValue().toString();
-    }
-    
-    /**
-     * Caches all the log/leavesblocks within a specified radius of a center position in the world.
-     *
-     * @param  world   the world in which the blocks are located
-     * @param  center  the center position around which to cache blocks
-     * @param  radius  the radius within which to cache blocks
-     */
-    public void cacheCube(World world, BlockPos center, int radius) {
-        String dimension = getDimensionKey(world);
-
-        Woodsman.LOGGER.debug("Caching cube ({} :: {}) of radius {}", dimension, center.toShortString(), radius);
-        WorldUtil.getBlockPos(WorldUtil.cubicBoxFromCenter(center, radius), true)
-            .forEach((pos) -> {
-                // Already cached
-                if (stateCache.containsKey(dimension) && stateCache.get(dimension).containsKey(pos)) {
-                    return;
-                }
-
-                updateCache(dimension, pos, world.getBlockState(pos), true);
-            });
-        Woodsman.LOGGER.debug("Caching cube ({} :: {}) of radius {} done", dimension, center.toShortString(), radius);
-    }
-
-    public void updateCache(String dimension, BlockPos pos, BlockState state, Boolean addIfMissing) {
-        if (addIfMissing && !stateCache.containsKey(dimension)) {
-            stateCache.put(dimension, new HashMap<>());
+    public static Optional<List<BlockPos>> getNearestTreeFromCache(GlobalPos pos) {
+        RegistryKey<World> dimension = pos.getDimension();
+        if (!treeCache.containsKey(dimension)) {
+            return Optional.empty();
         }
 
-        if (!stateCache.containsKey(dimension)) {
-            return;
+        BlockPos centerPos = pos.getPos();
+        Optional<BlockPos> key = treeCache.get(dimension).keySet()
+            .stream()
+            .sorted(Comparator.comparingDouble(rootPos -> rootPos.getSquaredDistance(centerPos)))
+            .findFirst();
+        
+        if (key.isEmpty()) {
+            return Optional.empty();
         }
 
-        // -6 -59 -9
-        Map<BlockPos, BlockState> dimensionCache = stateCache.get(dimension);
-        if (!dimensionCache.containsKey(pos) && !addIfMissing) {
-            return;
-        }
-
-        if (
-            state.isAir()
-            || state.isIn(BlockTags.DIRT)
-            || state.isIn(BlockTags.LEAVES)
-            || state.isIn(BlockTags.SAPLINGS)
-            || state.isIn(BlockTags.LOGS_THAT_BURN)
-            || state.isIn(ModBlockTagsProvider.STORAGE_BLOCKS)
-        ) {
-            dimensionCache.put(pos, state);
-        } else {
-            dimensionCache.remove(pos);
-        }
-    }
-
-    public CachedBlock getCachedBlock(World world, BlockPos pos) {
-        String dimension = getDimensionKey(world);
-
-        if (stateCache.containsKey(dimension) && stateCache.get(dimension).containsKey(pos)) {
-            return new CachedBlock(Optional.of(stateCache.get(dimension).get(pos)));
-        }
-
-        return new CachedBlock(Optional.empty());
-    }
-
-    public List<BlockState> getStatesInBox(World world, Box box) {
-        String dimension = getDimensionKey(world);
-
-        if (!stateCache.containsKey(dimension)) {
-            return List.of();
-        }
-
-        Map<BlockPos, BlockState> cache = stateCache.get(dimension);
-
-        return WorldUtil.getBlockPos(box)
-            .parallelStream()
-            .map(pos -> cache.get(pos))
-            .filter(pos -> pos != null)
-            .toList();
+        return Optional.of(treeCache.get(dimension).get(key.get()));
     }
 }

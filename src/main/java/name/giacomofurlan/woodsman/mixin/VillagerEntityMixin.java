@@ -64,6 +64,6 @@ public class VillagerEntityMixin {
         }
 
         World world = villager.getEntityWorld();
-        WorldCache.getInstance().cacheCube(world, jobSite.get().getPos(), 50);
+        WorldCache.cacheTrees(world, jobSite.get().getPos(), 50);
     }
 }

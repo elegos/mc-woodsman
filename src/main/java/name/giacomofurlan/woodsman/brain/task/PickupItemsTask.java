@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import name.giacomofurlan.woodsman.Woodsman;
 import name.giacomofurlan.woodsman.brain.ModMemoryModuleType;
-import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.entity.Entity.RemovalReason;
 import net.minecraft.entity.ItemEntity;
@@ -66,6 +65,8 @@ public class PickupItemsTask extends VillagerWorkTask {
             return false;
         }
 
+        brain.remember(ModMemoryModuleType.CURRENT_WOODSMAN_TASK, getName());
+
         return true;
     }
     
@@ -104,6 +105,8 @@ public class PickupItemsTask extends VillagerWorkTask {
                 }
             });
 
+            lastCheckedTime = 0l;
+
             return;
         }
 
@@ -139,7 +142,6 @@ public class PickupItemsTask extends VillagerWorkTask {
     }
 
     protected List<ItemEntity> getItemsToPick(World world, BlockPos entityPos, int radius) {
-        WorldCache worldCache = WorldCache.getInstance();
         return world.getEntitiesByClass(
             ItemEntity.class,
             WorldUtil.cubicBoxFromCenter(entityPos, radius),
@@ -148,7 +150,7 @@ public class PickupItemsTask extends VillagerWorkTask {
                 || itemsToPick.stream().anyMatch(item -> itemEntity.getStack().getItem().equals(item))
             ) && (
                 // Hide items on leaves, which probably are not reachable in any case
-                !worldCache.getCachedBlock(world, itemEntity.getBlockPos().down()).isIn(BlockTags.LEAVES))
+                !world.getBlockState(itemEntity.getBlockPos().down()).isIn(BlockTags.LEAVES))
             )
         );
     }

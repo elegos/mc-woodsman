@@ -3,7 +3,6 @@ package name.giacomofurlan.woodsman.brain.task;
 import java.util.HashMap;
 import java.util.Optional;
 
-import name.giacomofurlan.woodsman.util.WorldCache;
 import name.giacomofurlan.woodsman.util.WorldUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -108,12 +107,9 @@ public class PlantSaplingActivator extends WalkableActivator {
     }
 
     protected static boolean isValidPlantPos(World world, BlockPos pos) {
-        WorldCache worldCache = WorldCache.getInstance();
-
-        return worldCache.getCachedBlock(world, pos).isAir()
-            && worldCache.getCachedBlock(world, pos.down()).isIn(BlockTags.DIRT)
-            && worldCache.getStatesInBox(world, new Box(pos).expand(TREE_DISTANCE, 0, TREE_DISTANCE))
-                .stream()
+        return world.getBlockState(pos).isAir()
+            && world.getBlockState(pos.down()).isIn(BlockTags.DIRT)
+            && world.getStatesInBox(new Box(pos).expand(TREE_DISTANCE, 0, TREE_DISTANCE))
                 .map(state -> !state.isIn(BlockTags.LOGS_THAT_BURN) && !state.isIn(BlockTags.SAPLINGS))
                 .reduce(true, (acc, val) -> acc && val);
     }
